@@ -59,7 +59,9 @@ On a **Steam Deck / SteamOS**: switch to Desktop Mode, open the site in a browse
 | Android APK | [v0.1.0-beta prerelease](https://github.com/BowieMoonenTTV/miku-home/releases/tag/v0.1.0-beta): signed, sideload. Not yet tested with TalkBack on a phone |
 | Linux Flatpak | Bundle on the [release page](https://github.com/BowieMoonenTTV/miku-home/releases/tag/v0.1.0-beta). Not on Flathub |
 | Linux .deb | On the [release page](https://github.com/BowieMoonenTTV/miku-home/releases/tag/v0.1.0-beta) |
-| Windows / macOS | Built by CI (Tauri), unsigned; see [docs/signing.md](docs/signing.md) for the warnings you will see |
+| Windows | [Miku.Home_0.1.0-beta_x64-setup.exe](https://github.com/BowieMoonenTTV/miku-home/releases/download/v0.1.0-beta/Miku.Home_0.1.0-beta_x64-setup.exe). Built by CI, unsigned, not yet tried on a real PC; see [docs/signing.md](docs/signing.md) |
+| macOS | [Miku.Home_0.1.0-beta_universal.dmg](https://github.com/BowieMoonenTTV/miku-home/releases/download/v0.1.0-beta/Miku.Home_0.1.0-beta_universal.dmg). Built by CI, unsigned, not yet tried on a real Mac |
+| Linux AppImage | [Miku.Home_0.1.0-beta_amd64.AppImage](https://github.com/BowieMoonenTTV/miku-home/releases/download/v0.1.0-beta/Miku.Home_0.1.0-beta_amd64.AppImage). Built by CI, not yet tried on a real desktop |
 
 Check downloads against `SHA256SUMS` on the release page.
 
