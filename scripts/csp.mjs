@@ -1,4 +1,7 @@
 // Computes the hash of the inline import map and writes a strict CSP into app/index.html.
+// It also writes app/vercel.json, so the Vercel deployment sends the same CSP as an HTTP header,
+// plus frame-ancestors (which browsers ignore in a meta tag) and the same security headers
+// as server/server.js.
 // Optional add-on origins (your own Home Assistant / Ollama) are appended from env at build time:
 //   MIKU_CONNECT="https://ha.example.ts.net https://ollama.example.ts.net" node scripts/csp.mjs
 import { readFileSync, writeFileSync } from "node:fs";
@@ -26,3 +29,27 @@ const csp = [
 html = html.replace(/(<meta http-equiv="Content-Security-Policy" content=")[^"]*(")/, `$1${csp}$2`);
 writeFileSync(p, html);
 console.log("CSP written:", csp);
+
+// The privacy and status pages run no scripts; reuse the CSP already in their meta tags.
+const metaCsp = (file) => readFileSync(new URL(`../app/${file}`, import.meta.url), "utf8")
+  .match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)"/)[1];
+const noFrames = (policy) => `${policy}; frame-ancestors 'none'`;
+const vercel = {
+  cleanUrls: false,
+  headers: [
+    { source: "/(.*)", headers: [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "no-referrer" },
+      { key: "Permissions-Policy", value: "microphone=(self), camera=(), geolocation=()" },
+      { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+      { key: "X-Frame-Options", value: "DENY" },
+    ] },
+    { source: "/", headers: [{ key: "Content-Security-Policy", value: noFrames(csp) }] },
+    { source: "/index.html", headers: [{ key: "Content-Security-Policy", value: noFrames(csp) }] },
+    { source: "/privacy.html", headers: [{ key: "Content-Security-Policy", value: noFrames(metaCsp("privacy.html")) }] },
+    { source: "/status.html", headers: [{ key: "Content-Security-Policy", value: noFrames(metaCsp("status.html")) }] },
+    { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
+  ],
+};
+writeFileSync(new URL("../app/vercel.json", import.meta.url), JSON.stringify(vercel, null, 2) + "\n");
+console.log("Wrote app/vercel.json");
