@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Flatpak: the window showed "This call is not available inside the sandbox" instead of the app. The sandbox has no network, so the proxy lookup was refused; the launcher now tells WebKit not to use a proxy for its own local server.
 
 - No double speech with a screen reader: the caption log is no longer a live region; replies are announced through a separate polite live region only when Miku's own voice is not speaking them.
 - Speak button keeps the accessible name "Speak" and uses `aria-pressed` only; the visible "listening" hint is hidden from screen readers.
