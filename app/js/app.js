@@ -60,8 +60,9 @@ let liveTimer = null;
 function announce(text) {
   clearTimeout(liveTimer);
   els.replyLive.textContent = "";
-  // Re-set on the next frame so a repeated, identical reply is still announced.
-  requestAnimationFrame(() => { els.replyLive.textContent = text; });
+  // Re-set after a short delay so a repeated, identical reply is still announced.
+  // setTimeout, not requestAnimationFrame: animation frames pause in background or hidden windows.
+  setTimeout(() => { els.replyLive.textContent = text; }, 100);
   // Clear afterwards so the hidden copy does not show up twice when browsing the page.
   liveTimer = setTimeout(() => { els.replyLive.textContent = ""; }, 7000);
 }
