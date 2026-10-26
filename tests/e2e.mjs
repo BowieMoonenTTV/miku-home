@@ -105,6 +105,127 @@ check("axe-core WCAG 2.2 AA + best practice: 0 violations", axe.v.length === 0, 
   await tctx.close();
 }
 
+// Voice speed: one saved speed and one voice for every utterance, even when voices load
+// late and in a shuffled order (as on Android Chrome), and even with no word-boundary events.
+const fakeAndroidVoices = () => {
+  window.__utts = [];
+  const mk = (name, lang, def) => ({ name, lang, localService: true, voiceURI: "fake-" + name, default: !!def });
+  const all = [mk("Zoe", "en-GB"), mk("Amy", "en-US"), mk("Net", "en-US"), mk("Ben", "en-US")];
+  all[2].localService = false; // a network voice: must never be used
+  let loaded = false, calls = 0; const listeners = [];
+  window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
+  const fake = {
+    speaking: false, pending: false,
+    getVoices: () => { if (!loaded) return []; calls++; return calls % 2 ? all.slice() : all.slice().reverse(); },
+    speak(u) { window.__utts.push({ text: u.text, rate: u.rate, voice: u.voice && u.voice.voiceURI, lang: u.lang });
+      fake.speaking = true; setTimeout(() => u.onstart && u.onstart(), 5); setTimeout(() => { fake.speaking = false; u.onend && u.onend(); }, 700); },
+    cancel() { fake.speaking = false; }, addEventListener: (n, f) => listeners.push(f), removeEventListener: () => {},
+  };
+  Object.defineProperty(window, "speechSynthesis", { value: fake, configurable: true });
+  setTimeout(() => { loaded = true; listeners.forEach((f) => f()); setTimeout(() => listeners.forEach((f) => f()), 100); }, 400);
+};
+{
+  const vctx = await browser.newContext();
+  await vctx.addInitScript(fakeAndroidVoices);
+  const vp = await vctx.newPage();
+  vp.on("request", (r) => { const u = r.url(); if (!u.startsWith(origin) && !u.startsWith("data:") && !u.startsWith("blob:")) external.push(u); });
+  vp.on("pageerror", (e) => consoleErrors.push(e.message));
+  await vp.goto(base, { waitUntil: "networkidle" });
+  await vp.waitForFunction(() => !/starting/.test(document.getElementById("mode-status").textContent));
+  const say = async (text) => { const n = await vp.$$eval("#caption-log li", (l) => l.length); await vp.fill("#text-input", text); await vp.press("#text-input", "Enter"); await vp.waitForSelector(`#caption-log li:nth-child(${n + 2})`); await vp.waitForTimeout(150); };
+  await say("say hi");
+  let u = await vp.evaluate(() => window.__utts.slice());
+  check("default speed 1.0 applied to the first reply", u.length === 1 && u[0].rate === 1, JSON.stringify(u));
+  // Change the speed with the keyboard (slider), then speak three different ways.
+  await vp.focus("#rate-input"); for (let i = 0; i < 3; i++) await vp.keyboard.press("ArrowRight");
+  const shown = await vp.textContent("#rate-value");
+  await say("what time is it");
+  await vp.click("#repeat-btn"); await vp.waitForTimeout(200);
+  await say("Tell me something long. " + "This sentence makes the reply long. ".repeat(10));
+  u = await vp.evaluate(() => window.__utts.slice(1));
+  const rates = [...new Set(u.map((x) => x.rate))], voicesUsed = [...new Set(u.map((x) => x.voice))];
+  check("changed speed applies to typed, repeated and long replies alike", shown === "1.3 times" && rates.length === 1 && rates[0] === 1.3 && u.length >= 3, `${shown}; rates ${JSON.stringify(rates)}; ${u.length} utterances`);
+  const all = await vp.evaluate(() => window.__utts.map((x) => x.voice));
+  check("same on-device voice for every utterance (voices loaded late, shuffled order)", new Set(all).size === 1 && all[0] === "fake-Amy" && !all.includes("fake-Net"), JSON.stringify([...new Set(all)]));
+  check("utterance language is set to the voice's language", (await vp.evaluate(() => window.__utts.every((x) => x.lang === "en-US"))));
+  check("chosen voice is pinned in settings", (await vp.evaluate(() => window.__miku.prefs.voice)) === "fake-Amy" && (await vp.inputValue("#voice-select")) === "fake-Amy");
+  await vp.reload({ waitUntil: "networkidle" });
+  await vp.waitForFunction(() => !/starting/.test(document.getElementById("mode-status").textContent));
+  await say("say hi");
+  u = await vp.evaluate(() => window.__utts.slice());
+  check("speed and voice persist after reload", u.length === 1 && u[0].rate === 1.3 && u[0].voice === "fake-Amy" && (await vp.textContent("#rate-value")) === "1.3 times", JSON.stringify(u));
+
+  // Avatar: present AND alive. It reacts to thinking/speaking even without boundary events.
+  await vp.check("#avatar-toggle");
+  await vp.waitForFunction(() => window.__miku.avatar || /couldn't start/.test(document.getElementById("avatar-state").textContent), null, { timeout: 15000 });
+  const kind = await vp.evaluate(() => window.__miku.avatar ? window.__miku.avatar.kind : "failed: " + document.getElementById("avatar-state").textContent);
+  check("avatar starts (WebGL)", kind === "placeholder", kind);
+  if (kind === "placeholder") {
+    const f1 = Number(await vp.getAttribute("#avatar-stage", "data-frames")); await vp.waitForTimeout(1200);
+    const f2 = Number(await vp.getAttribute("#avatar-stage", "data-frames"));
+    check("avatar animates while idle (frames keep rendering)", f2 > f1 + 10, `${f1} → ${f2} frames`);
+    check("avatar waves hello when turned on", (await vp.getAttribute("#avatar-stage", "data-gesture")) === "wave" || f2 > 0);
+    await vp.fill("#text-input", "say hi"); await vp.press("#text-input", "Enter");
+    await vp.waitForFunction(() => document.getElementById("avatar-stage").dataset.state === "speaking", null, { timeout: 2000 }).then(() => true, () => false)
+      .then((ok) => check("avatar switches to speaking while Miku talks", ok));
+    check("avatar status shown as text, not a live region", /talking/.test(await vp.textContent("#avatar-state")) && !(await vp.getAttribute("#avatar-state", "aria-live")) && !(await vp.getAttribute("#avatar-state", "role")));
+    await vp.waitForFunction(() => document.getElementById("avatar-stage").dataset.state === "idle", null, { timeout: 4000 }).then(() => true, () => false)
+      .then((ok) => check("avatar returns to resting and nods when Miku finishes", ok));
+    await vp.addScriptTag({ url: base + "vendor/axe-core/axe.min.js" });
+    const axeA = await vp.evaluate(async () => (await window.axe.run(document, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"] })).violations.map((v) => v.id));
+    check("axe with the avatar on: 0 violations", axeA.length === 0, axeA.join(", ") || "none");
+    check("avatar canvas is inside the aria-hidden stage", (await vp.$$eval("#avatar-stage canvas", (c) => c.length)) === 1 && (await vp.getAttribute("#avatar-stage", "aria-hidden")) === "true");
+  }
+  await vctx.close();
+}
+// Reduced motion: the avatar can still be turned on, holds still while idle, and shows state.
+{
+  const rctx = await browser.newContext({ reducedMotion: "reduce" });
+  await rctx.addInitScript(fakeAndroidVoices);
+  await rctx.addInitScript(() => localStorage.setItem("miku.prefs", JSON.stringify({ avatar: true })));
+  const rp = await rctx.newPage();
+  rp.on("pageerror", (e) => consoleErrors.push(e.message));
+  rp.on("request", (r) => { const u = r.url(); if (!u.startsWith(origin) && !u.startsWith("data:") && !u.startsWith("blob:")) external.push(u); });
+  await rp.goto(base, { waitUntil: "networkidle" });
+  await rp.waitForFunction(() => window.__miku.avatar, null, { timeout: 15000 }).catch(() => {});
+  check("reduced motion: avatar setting is kept on after reload", await rp.isChecked("#avatar-toggle") && !(await rp.isHidden("#avatar-stage")));
+  await rp.waitForTimeout(2200); // let the hello pose finish
+  const r1 = Number(await rp.getAttribute("#avatar-stage", "data-frames")); await rp.waitForTimeout(1500);
+  const r2 = Number(await rp.getAttribute("#avatar-stage", "data-frames"));
+  check("reduced motion: no animation loop while idle", r1 > 0 && r2 === r1, `${r1} → ${r2} frames`);
+  await rp.waitForFunction(() => !/starting/.test(document.getElementById("mode-status").textContent));
+  await rp.fill("#text-input", "say hi"); await rp.press("#text-input", "Enter");
+  await rp.waitForFunction(() => document.getElementById("avatar-stage").dataset.state === "speaking", null, { timeout: 2000 }).then(() => true, () => false)
+    .then((ok) => check("reduced motion: avatar still shows speaking (still pose)", ok));
+  await rctx.close();
+}
+
+// Android app path: the WebView has no speechSynthesis, so Miku must use the native
+// TextToSpeech plugin through the Capacitor bridge, with the same speed setting.
+{
+  const actx = await browser.newContext();
+  await actx.addInitScript(() => {
+    delete window.speechSynthesis; window.__native = [];
+    const voices = [{ name: "en-us-x-net", lang: "en-US", localService: false, voiceURI: "net", default: false },
+      { name: "en-us-x-local", lang: "en-US", localService: true, voiceURI: "local", default: true }];
+    window.Capacitor = { isNativePlatform: () => true, getPlatform: () => "android", PluginHeaders: [{ name: "TextToSpeech", methods: [] }],
+      nativeCallback: () => "cb1",
+      nativePromise: (plugin, method, opts) => { window.__native.push({ plugin, method, opts }); return new Promise((res) => setTimeout(() => res(method === "getSupportedVoices" ? { voices } : undefined), method === "speak" ? 300 : 5)); } };
+    localStorage.setItem("miku.prefs", JSON.stringify({ rate: "1.4" }));
+  });
+  const ap = await actx.newPage();
+  ap.on("pageerror", (e) => consoleErrors.push(e.message));
+  await ap.goto(base, { waitUntil: "networkidle" });
+  await ap.waitForFunction(() => !/starting/.test(document.getElementById("mode-status").textContent));
+  await ap.fill("#text-input", "say hi"); await ap.press("#text-input", "Enter");
+  await ap.waitForTimeout(800);
+  const calls = await ap.evaluate(() => window.__native.filter((c) => c.method === "speak").map((c) => c.opts));
+  const live = await ap.textContent("#reply-live");
+  check("Android app: speaks through native on-device TTS with the saved speed", (await ap.evaluate(() => window.__miku.engineName())) === "android" && calls.length === 1 && calls[0].rate === 1.4 && calls[0].voice === 1 && calls[0].lang === "en-US", JSON.stringify(calls));
+  check("Android app: native voice means no duplicate screen-reader announcement", live === "", JSON.stringify(live));
+  await actx.close();
+}
+
 // privacy.html ships script-src 'none', so audit it in a CSP-bypassing context (test only).
 const pctx = await browser.newContext({ bypassCSP: true });
 const ppage = await pctx.newPage();

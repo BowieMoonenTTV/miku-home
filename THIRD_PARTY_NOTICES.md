@@ -15,3 +15,5 @@ Miku Home is MIT licensed. It vendors these components unchanged in `app/vendor/
 axe-core is MPL-2.0: it is used unmodified, and its source is available at the link above. It only runs when you press "Check this page for accessibility issues" or in tests.
 
 No Hatsune Miku 3D model is included. Character rights belong to Crypton Future Media, and model licences vary. Use your own VRM at `app/avatars/miku.vrm` only if its licence allows it.
+
+The Android app (`mobile/`) is built with Capacitor (MIT, Ionic) and `@capacitor-community/text-to-speech` 8.0.2 (MIT, <https://github.com/capacitor-community/text-to-speech>), which lets Miku speak with Android's own on-device text-to-speech engine. They are installed from npm at build time and are not vendored here.

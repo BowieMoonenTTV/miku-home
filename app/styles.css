@@ -42,6 +42,12 @@ input[type=range] { width: 100%; min-height: 48px; accent-color: var(--accent); 
 .caption-log time { color: var(--muted); font-size: 0.9rem; margin-left: 0.4rem; }
 .avatar-stage { width: 100%; aspect-ratio: 4 / 3; max-height: 22rem; border: 2px solid var(--border); border-radius: 10px; background: var(--panel); }
 .avatar-stage[hidden] { display: none; }
+/* Calm state outline: colour changes only, no flashing. */
+.avatar-stage { transition: border-color 0.6s ease; }
+.avatar-stage[data-state="listening"] { border-color: #39d0d8; }
+.avatar-stage[data-state="thinking"] { border-color: #b39ddb; }
+.avatar-stage[data-state="speaking"] { border-color: #ffd166; }
+.avatar-stage canvas { display: block; width: 100%; height: 100%; }
 details { margin: 1rem 0; } summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
