@@ -1,0 +1,13 @@
+{
+  "appId": "io.github.bowiemoonenttv.mikuhome",
+  "appName": "Miku Home",
+  "webDir": "../app",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

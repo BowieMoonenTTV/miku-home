@@ -1,0 +1,15 @@
+{
+  "name": "miku-home-desktop",
+  "version": "0.1.0-beta",
+  "private": true,
+  "license": "MIT",
+  "description": "Tauri v2 desktop shell for the Miku Home web app. Bundles ../app; makes no network requests.",
+  "scripts": {
+    "tauri": "tauri",
+    "build": "tauri build",
+    "dev": "tauri dev"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.4"
+  }
+}

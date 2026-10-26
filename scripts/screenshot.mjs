@@ -1,0 +1,10 @@
+import { chromium } from "playwright-core";
+const b = await chromium.launch({ executablePath: "/usr/bin/google-chrome", args: ["--no-sandbox"] });
+const p = await b.newPage({ viewport: { width: 1000, height: 760 } });
+await p.goto(process.env.BASE_URL || "http://localhost:8080/");
+await p.waitForTimeout(1500);
+const input = p.locator("input[type=text], textarea").first();
+await input.fill("say hi"); await input.press("Enter");
+await p.waitForTimeout(1500);
+await p.screenshot({ path: "docs/screenshots/main.png" });
+await b.close();

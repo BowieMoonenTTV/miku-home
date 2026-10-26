@@ -15,7 +15,7 @@ jobs:
       - uses: android-actions/setup-android@v3
       - name: Generate Android project
         working-directory: mobile
-        run: npm ci && npx cap add android && node patch-android.mjs && npx cap sync android
+        run: npm ci && npx cap add android && node patch-android.mjs && pip install pillow && python3 brand-android.py && npx cap sync android
       - name: Build release APK (signed only if secrets exist)
         working-directory: mobile/android
         env:

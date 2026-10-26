@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Miku Home needs no Tauri commands; the web app runs on its own.",
+  "windows": ["main"],
+  "permissions": []
+}

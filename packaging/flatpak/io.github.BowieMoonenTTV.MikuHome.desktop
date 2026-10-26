@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Miku Home
+Comment=Accessible voice assistant that runs on your device
+Exec=miku-home
+Icon=io.github.BowieMoonenTTV.MikuHome
+Terminal=false
+Categories=Utility;Accessibility;
+Keywords=assistant;voice;speech;captions;screen reader;
+StartupNotify=true

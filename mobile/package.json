@@ -1,0 +1,18 @@
+{
+  "name": "miku-home-mobile",
+  "version": "0.1.0-beta",
+  "private": true,
+  "description": "Capacitor wrapper for the Miku Home web app (Android). All assets are bundled; no network access is needed.",
+  "license": "MIT",
+  "scripts": {
+    "android:init": "cap add android && node patch-android.mjs && python3 brand-android.py && cap sync android",
+    "android:sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}

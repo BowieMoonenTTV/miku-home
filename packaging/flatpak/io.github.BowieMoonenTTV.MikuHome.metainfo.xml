@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.BowieMoonenTTV.MikuHome</id>
+  <name>Miku Home</name>
+  <summary>Accessible voice assistant that runs on your device</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.bowiemoonenttv">
+    <name>BowieMoonenTTV</name>
+  </developer>
+  <description>
+    <p>Miku Home is a free, open-source voice assistant built for blind and low-vision people and for people whose speech is hard for other assistants to understand.</p>
+    <ul>
+      <li>Speak or type. Every reply is shown as a caption and announced to screen readers.</li>
+      <li>Speech is recognised on your computer. Nothing is sent to any server.</li>
+      <li>Works fully offline, with no account, no analytics and no ads.</li>
+      <li>High-contrast, keyboard-first design tested with Orca.</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.BowieMoonenTTV.MikuHome.desktop</launchable>
+  <url type="homepage">https://github.com/BowieMoonenTTV/miku-home</url>
+  <url type="bugtracker">https://github.com/BowieMoonenTTV/miku-home/issues</url>
+  <url type="vcs-browser">https://github.com/BowieMoonenTTV/miku-home</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Typing say hi gets a captioned reply</caption>
+      <image>https://raw.githubusercontent.com/BowieMoonenTTV/miku-home/v0.1.0-beta/docs/screenshots/main.png</image>
+    </screenshot>
+  </screenshots>
+  <branding>
+    <color type="primary" scheme_preference="light">#9ee6e0</color>
+    <color type="primary" scheme_preference="dark">#00595f</color>
+  </branding>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+    <control>voice</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0-beta" date="2026-10-26" type="development">
+      <description>
+        <p>First beta: standalone mode with on-device speech recognition, captions and a privacy page.</p>
+      </description>
+    </release>
+  </releases>
+</component>

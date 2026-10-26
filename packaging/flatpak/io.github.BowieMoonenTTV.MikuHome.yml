@@ -1,0 +1,34 @@
+# Local build manifest (builds from this checkout). For the Flathub submission,
+# flathub/io.github.BowieMoonenTTV.MikuHome.yml uses a git tag + commit instead.
+id: io.github.BowieMoonenTTV.MikuHome
+runtime: org.gnome.Platform
+runtime-version: '51'
+sdk: org.gnome.Sdk
+command: miku-home
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  # Microphone for on-device speech recognition. No --share=network: the app is fully offline.
+  - --socket=pulseaudio
+modules:
+  - name: miku-home
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 packaging/flatpak/miku-home.py ${FLATPAK_DEST}/bin/miku-home
+      - mkdir -p ${FLATPAK_DEST}/share/miku-home && cp -r app ${FLATPAK_DEST}/share/miku-home/app
+      - install -Dm644 packaging/flatpak/${FLATPAK_ID}.desktop ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 packaging/flatpak/${FLATPAK_ID}.metainfo.xml ${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml
+      - install -Dm644 app/icons/icon.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
+      - install -Dm644 app/icons/icon-512.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png
+      - install -Dm644 LICENSE ${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}/LICENSE
+      - install -Dm644 THIRD_PARTY_NOTICES.md ${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}/THIRD_PARTY_NOTICES.md
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - node_modules
+          - mobile
+          - desktop
+          - .git

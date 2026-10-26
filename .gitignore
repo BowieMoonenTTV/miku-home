@@ -12,3 +12,8 @@ mobile/ios/
 dist/
 *.flatpak
 .flatpak-builder/
+desktop/src-tauri/gen/
+*.apk
+*.idsig
+*.deb
+*.AppImage
