@@ -2,6 +2,8 @@ name: Desktop release (Tauri)
 on:
   push: { tags: ["v*"] }
   workflow_dispatch:
+    inputs:
+      tag: { description: "Existing release tag to upload to", required: true, default: "v0.1.0-beta" }
 permissions: { contents: write }
 jobs:
   build:
@@ -9,9 +11,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { platform: windows-latest, args: "" }
+          - { platform: windows-latest, args: "--bundles nsis" }
           - { platform: macos-latest, args: "--target universal-apple-darwin" }
-          - { platform: ubuntu-22.04, args: "" }
+          - { platform: ubuntu-22.04, args: "--bundles appimage" }
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
@@ -23,20 +25,15 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
       - run: npm ci
         working-directory: desktop
-      # Signing secrets are optional; when absent tauri-action builds unsigned artifacts.
+      # Unsigned builds: no Apple or Windows signing certificates (paid) are set up.
+      # MSI and RPM reject the -beta version, so Windows ships NSIS and Linux ships AppImage (.deb is built locally).
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: Miku Home ${{ github.ref_name }}
-          releaseDraft: true
+          tagName: ${{ inputs.tag || github.ref_name }}
+          releaseName: Miku Home ${{ inputs.tag || github.ref_name }}
+          releaseDraft: false
           prerelease: true
           args: ${{ matrix.args }}
