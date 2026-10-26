@@ -71,6 +71,12 @@ check("axe-core WCAG 2.2 AA + best practice: 0 violations", axe.v.length === 0, 
   const tctx = await browser.newContext();
   await tctx.addInitScript(() => {
     window.__spoken = [];
+    // BUG-01: count every time the reply announcer receives text (what Orca speaks and brailles).
+    window.__liveWrites = [];
+    document.addEventListener("DOMContentLoaded", () => {
+      const live = document.getElementById("reply-live");
+      new MutationObserver(() => { const t = live.textContent; if (t) window.__liveWrites.push(t); }).observe(live, { childList: true, characterData: true, subtree: true });
+    });
     const voice = { name: "Fake local voice", lang: "en-US", localService: true, voiceURI: "fake-local", default: true };
     window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
     const fake = { getVoices: () => [voice], speak: (u) => { window.__spoken.push(u.text); setTimeout(() => u.onend && u.onend(), 10); },
@@ -86,7 +92,10 @@ check("axe-core WCAG 2.2 AA + best practice: 0 violations", axe.v.length === 0, 
   await say("say hi", 2);
   let st = await tp.evaluate(() => ({ spoken: window.__spoken.slice(), live: document.getElementById("reply-live").textContent, cap: document.getElementById("caption-log").textContent }));
   check("app voice on: reply spoken by Miku", st.spoken.some((t) => t.includes("Hi Bowie")), JSON.stringify(st.spoken));
-  check("app voice on: reply NOT announced via live region (no double speech)", st.live === "", JSON.stringify(st.live));
+  // BUG-01: with Miku's voice on, braille users still need the reply, so it must reach the
+  // live region, and exactly once (never twice for one reply).
+  const w1 = await tp.evaluate(() => window.__liveWrites.filter((t) => /Hi Bowie/.test(t)).length);
+  check("app voice on: reply reaches the live region (braille) exactly once", w1 === 1, `${w1} writes; live=${JSON.stringify(st.live)}`);
   check("app voice on: caption still visible", st.cap.includes("Hi Bowie"));
   await tp.click("#settings-heading"); // make sure nothing else is focused
   await tp.focus("#sr-toggle"); await tp.keyboard.press("Space");
@@ -97,12 +106,41 @@ check("axe-core WCAG 2.2 AA + best practice: 0 violations", axe.v.length === 0, 
   st = await tp.evaluate(() => ({ spoken: window.__spoken.slice(), live: document.getElementById("reply-live").textContent, cap: document.getElementById("caption-log").textContent }));
   check("screen reader mode: Miku's voice stays silent", st.spoken.length === before, JSON.stringify(st.spoken));
   check("screen reader mode: reply announced via polite live region", /Hi Bowie/.test(st.live), JSON.stringify(st.live));
+  const w2 = await tp.evaluate(() => window.__liveWrites.filter((t) => /Hi Bowie/.test(t)).length);
+  check("screen reader mode (voice off): second reply reaches the live region exactly once", w2 === 2, `${w2} total writes for 2 replies`);
   check("screen reader mode: caption still visible", (st.cap.match(/Hi Bowie/g) || []).length === 2);
   await tp.reload({ waitUntil: "networkidle" });
   check("screen reader setting persists after reload", await tp.isChecked("#sr-toggle") && !(await tp.isChecked("#speak-toggle")));
   await tp.check("#speak-toggle");
   check("turning app voice back on turns screen reader mode off", !(await tp.isChecked("#sr-toggle")));
   await tctx.close();
+}
+
+// BUG-01: if Miku's voice fails, the reply is still announced, and still only once.
+{
+  const ectx = await browser.newContext();
+  await ectx.addInitScript(() => {
+    window.__liveWrites = [];
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = document.getElementById("reply-live");
+      new MutationObserver(() => { const t = el.textContent; if (t) window.__liveWrites.push(t); }).observe(el, { childList: true, characterData: true, subtree: true });
+    });
+    const voice = { name: "Broken local voice", lang: "en-US", localService: true, voiceURI: "broken-local", default: true };
+    window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
+    const fake = { getVoices: () => [voice], speak: (u) => { setTimeout(() => u.onerror && u.onerror({ error: "synthesis-failed" }), 20); },
+      cancel: () => {}, addEventListener: () => {}, removeEventListener: () => {}, speaking: false, pending: false };
+    Object.defineProperty(window, "speechSynthesis", { value: fake, configurable: true });
+  });
+  const ep = await ectx.newPage();
+  ep.on("request", (r) => { const u = r.url(); if (!u.startsWith(origin) && !u.startsWith("data:") && !u.startsWith("blob:")) external.push(u); });
+  ep.on("pageerror", (e) => consoleErrors.push(e.message));
+  await ep.goto(base, { waitUntil: "networkidle" });
+  await ep.waitForFunction(() => !/starting/.test(document.getElementById("mode-status").textContent));
+  await ep.fill("#text-input", "say hi"); await ep.press("#text-input", "Enter");
+  await ep.waitForSelector("#caption-log li:nth-child(2)"); await ep.waitForTimeout(500);
+  const ew = await ep.evaluate(() => window.__liveWrites.filter((t) => /Hi Bowie/.test(t)).length);
+  check("app voice error: reply still reaches the live region exactly once (no second announcement)", ew === 1, `${ew} writes`);
+  await ectx.close();
 }
 
 // Voice speed: one saved speed and one voice for every utterance, even when voices load
@@ -206,6 +244,11 @@ const fakeAndroidVoices = () => {
   const actx = await browser.newContext();
   await actx.addInitScript(() => {
     delete window.speechSynthesis; window.__native = [];
+    window.__liveWrites = [];
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = document.getElementById("reply-live");
+      new MutationObserver(() => { const t = el.textContent; if (t) window.__liveWrites.push(t); }).observe(el, { childList: true, characterData: true, subtree: true });
+    });
     const voices = [{ name: "en-us-x-net", lang: "en-US", localService: false, voiceURI: "net", default: false },
       { name: "en-us-x-local", lang: "en-US", localService: true, voiceURI: "local", default: true }];
     window.Capacitor = { isNativePlatform: () => true, getPlatform: () => "android", PluginHeaders: [{ name: "TextToSpeech", methods: [] }],
@@ -222,7 +265,8 @@ const fakeAndroidVoices = () => {
   const calls = await ap.evaluate(() => window.__native.filter((c) => c.method === "speak").map((c) => c.opts));
   const live = await ap.textContent("#reply-live");
   check("Android app: speaks through native on-device TTS with the saved speed", (await ap.evaluate(() => window.__miku.engineName())) === "android" && calls.length === 1 && calls[0].rate === 1.4 && calls[0].voice === 1 && calls[0].lang === "en-US", JSON.stringify(calls));
-  check("Android app: native voice means no duplicate screen-reader announcement", live === "", JSON.stringify(live));
+  const aw = await ap.evaluate(() => window.__liveWrites.filter((t) => /Hi Bowie/.test(t)).length);
+  check("Android app: native voice on, reply still reaches the live region (braille) exactly once", aw === 1, `${aw} writes; live=${JSON.stringify(live)}`);
   await actx.close();
 }
 
