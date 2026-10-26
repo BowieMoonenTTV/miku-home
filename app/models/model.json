@@ -1,0 +1,14 @@
+{
+  "name": "vosk-model-small-en-us-0.15.tar.gz",
+  "size": 41184862,
+  "parts": [
+    "vosk-model-small-en-us-0.15.tar.gz.part00",
+    "vosk-model-small-en-us-0.15.tar.gz.part01",
+    "vosk-model-small-en-us-0.15.tar.gz.part02",
+    "vosk-model-small-en-us-0.15.tar.gz.part03",
+    "vosk-model-small-en-us-0.15.tar.gz.part04",
+    "vosk-model-small-en-us-0.15.tar.gz.part05",
+    "vosk-model-small-en-us-0.15.tar.gz.part06",
+    "vosk-model-small-en-us-0.15.tar.gz.part07"
+  ]
+}

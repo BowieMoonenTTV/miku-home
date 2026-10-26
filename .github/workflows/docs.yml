@@ -1,0 +1,15 @@
+name: Docs
+on:
+  push: { paths: ["**.md", ".github/workflows/docs.yml"] }
+  pull_request: { paths: ["**.md"] }
+  schedule: [{ cron: "0 9 * * 1" }]
+permissions: { contents: read }
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DavidAnson/markdownlint-cli2-action@v20
+        with: { globs: "**/*.md\n!node_modules\n!app/vendor" }
+      - uses: lycheeverse/lychee-action@v2
+        with: { args: "--no-progress --exclude-path node_modules --exclude-path app/vendor './**/*.md'", fail: true }

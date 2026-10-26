@@ -1,0 +1,22 @@
+name: Flatpak bundle
+on:
+  push: { tags: ["v*"] }
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  flatpak:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-48
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: miku-home.flatpak
+          manifest-path: packaging/flatpak/io.github.BowieMoonenTTV.MikuHome.yml
+          cache-key: flatpak-${{ github.sha }}
+      - name: flatpak-builder-lint
+        run: |
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flatpak/io.github.BowieMoonenTTV.MikuHome.yml || true
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder appstream packaging/flatpak/io.github.BowieMoonenTTV.MikuHome.metainfo.xml

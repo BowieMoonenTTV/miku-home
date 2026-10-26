@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KGWZTFLHfImDo20yjPTxZITqNnvEbOxBPnsk6obngGY=' 'wasm-unsafe-eval' 'unsafe-eval'; worker-src 'self' blob:; connect-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; manifest-src 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Miku Home</title>
+  <meta name="description" content="Miku Home: an accessible, local-first voice assistant. Speak or type; every reply is captioned.">
+  <meta name="theme-color" content="#000000">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Miku Home">
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/",
+      "@pixiv/three-vrm": "./vendor/three-vrm/three-vrm.module.min.js"
+    }
+  }
+  </script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the conversation</a>
+  <header class="site-header">
+    <h1>Miku Home</h1>
+    <p id="mode-status" class="mode" role="status">Mode: starting…</p>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section aria-labelledby="talk-heading" class="talk">
+      <h2 id="talk-heading">Talk to Miku</h2>
+
+      <button id="speak-btn" class="speak" type="button" aria-describedby="speak-help" aria-pressed="false">
+        <span class="speak-label">Speak</span>
+      </button>
+      <p id="stt-status" class="status" role="status" aria-live="polite"></p>
+      <p id="speak-help" class="help">Press once to start listening and again to stop. Shortcut: Alt+Shift+S. If voice input is not available, type below.</p>
+
+      <div class="typed">
+        <label for="text-input">Type a message to Miku</label>
+        <div class="typed-row">
+          <input id="text-input" type="text" autocomplete="off" enterkeyhint="send" aria-describedby="text-help">
+          <button id="send-btn" type="button">Send</button>
+        </div>
+        <p id="text-help" class="help">Press Enter to send. Shortcut to jump here: Alt+Shift+T. Try “say hi”, “what time is it”, or “help”.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="captions-heading" class="captions">
+      <h2 id="captions-heading" tabindex="-1">Captions</h2>
+      <p class="help">Every spoken reply is written here. Shortcut: Alt+Shift+L.</p>
+      <ol id="caption-log" class="caption-log" aria-live="polite" aria-relevant="additions"></ol>
+      <div class="row">
+        <button id="repeat-btn" type="button">Repeat last reply</button>
+        <button id="clear-btn" type="button">Clear captions</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="avatar-heading" class="avatar">
+      <h2 id="avatar-heading">Avatar</h2>
+      <p id="avatar-text">Miku's avatar is a visual extra. It shows a simple animated face whose mouth moves while Miku talks. It adds no information beyond the captions.</p>
+      <div id="avatar-stage" class="avatar-stage" aria-hidden="true"></div>
+      <div class="row">
+        <label class="check"><input id="avatar-toggle" type="checkbox"> Show the animated avatar</label>
+      </div>
+    </section>
+
+    <section aria-labelledby="settings-heading" class="settings">
+      <h2 id="settings-heading">Settings</h2>
+      <div class="field">
+        <label for="voice-select">Miku's voice (from this device)</label>
+        <select id="voice-select"></select>
+      </div>
+      <div class="field">
+        <label for="rate-input">Speaking speed</label>
+        <input id="rate-input" type="range" min="0.5" max="1.6" step="0.1" value="1" aria-describedby="rate-value">
+        <output id="rate-value" for="rate-input">1.0 times</output>
+      </div>
+      <label class="check"><input id="speak-toggle" type="checkbox" checked> Speak replies aloud</label>
+      <details>
+        <summary>Keyboard shortcuts</summary>
+        <ul>
+          <li>Alt+Shift+S: start or stop listening</li>
+          <li>Alt+Shift+T: go to the typing box</li>
+          <li>Alt+Shift+L: go to the captions</li>
+          <li>Alt+Shift+R: repeat the last reply</li>
+          <li>Escape: stop listening and stop speaking</li>
+        </ul>
+      </details>
+      <details>
+        <summary>Home Assistant (optional add-on)</summary>
+        <p>Only used when your own Home Assistant address is set in config.js. The token stays in this browser on this device.</p>
+        <label for="ha-token">Home Assistant long-lived access token</label>
+        <div class="typed-row">
+          <input id="ha-token" type="password" autocomplete="new-password">
+          <button id="ha-save" type="button">Save token on this device</button>
+        </div>
+      </details>
+      <details id="crash-view">
+        <summary>Error log (stays on this device)</summary>
+        <p>Errors are recorded only on this device and never sent. To report a problem, copy or save this log and attach it to a GitHub issue yourself. It never contains audio, what you said, or what you typed.</p>
+        <label for="crash-text">Recorded errors</label>
+        <textarea id="crash-text" rows="6" readonly></textarea>
+        <div class="row">
+          <button id="crash-copy" type="button">Copy error log</button>
+          <button id="crash-export" type="button">Save error log as a file</button>
+          <button id="crash-clear" type="button">Clear error log</button>
+        </div>
+      </details>
+      <details>
+        <summary>About, privacy and accessibility check</summary>
+        <p>Free and open source under the MIT licence. Every feature, including all accessibility features, is free with no restrictions.</p>
+        <p>Privacy: no accounts, no tracking, no ads. Speech recognition and Miku's voice run on this device. Nothing you say or type leaves this device, except to your own Home Assistant or Ollama server if you set one up. <a href="privacy.html">Read the privacy notice</a>.</p>
+        <p><a href="https://github.com/BowieMoonenTTV/miku-home/blob/main/SUPPORT.md" target="_blank" rel="noopener noreferrer">Support the project (opens in your browser)</a>. Optional and never required.</p>
+        <button id="axe-btn" type="button">Run accessibility check on this page</button>
+        <p id="axe-result" role="status"></p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Miku Home by BowieMoonen. <a href="https://github.com/BowieMoonenTTV/miku-home">Source code</a>.</p>
+  </footer>
+</body>
+</html>

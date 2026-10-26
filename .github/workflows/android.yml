@@ -1,0 +1,42 @@
+name: Android APK
+on:
+  push: { tags: ["v*"] }
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: android-actions/setup-android@v3
+      - name: Generate Android project
+        working-directory: mobile
+        run: npm ci && npx cap add android && node patch-android.mjs && npx cap sync android
+      - name: Build release APK (signed only if secrets exist)
+        working-directory: mobile/android
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease
+          APK=app/build/outputs/apk/release/app-release-unsigned.apk
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > ks.jks
+            $BT/zipalign -p 4 $APK aligned.apk
+            $BT/apksigner sign --ks ks.jks --ks-pass env:KS_PASS --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASS --out ../../miku-home.apk aligned.apk
+            rm ks.jks
+          else
+            echo "No signing secrets: uploading unsigned APK (not installable)"; cp $APK ../../miku-home-unsigned.apk
+          fi
+      - uses: actions/upload-artifact@v4
+        with: { name: apk, path: "miku-home*.apk" }
+      - if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with: { files: "miku-home*.apk", prerelease: true }

@@ -1,0 +1,13 @@
+name: Sync wiki
+on:
+  push: { branches: [main], paths: ["docs/wiki/**"] }
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The GitHub wiki must be initialised once by creating any first page in the web UI.
+      - uses: Andrew-Chen-Wang/github-wiki-action@v4
+        with: { path: docs/wiki }

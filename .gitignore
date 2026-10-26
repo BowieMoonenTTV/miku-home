@@ -1,0 +1,14 @@
+node_modules/
+secrets/
+*.keystore
+*.jks
+*.p12
+.env
+.env.*
+app/avatars/*.vrm
+desktop/src-tauri/target/
+mobile/android/
+mobile/ios/
+dist/
+*.flatpak
+.flatpak-builder/

@@ -1,0 +1,11 @@
+name: Accessibility problem
+description: Something is hard to use with a screen reader, keyboard, voice or low vision
+labels: [accessibility]
+body:
+  - type: textarea
+    id: barrier
+    attributes: { label: What is hard to do }
+    validations: { required: true }
+  - type: input
+    id: at
+    attributes: { label: Assistive technology and version }
