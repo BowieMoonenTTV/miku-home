@@ -1,6 +1,7 @@
 ## What and why
 
 ## Checklist
+
 - [ ] `npm test` passes (includes the zero-external-request test)
 - [ ] Every new control has a label, a 48px target and visible focus
 - [ ] Voice features have a typed equivalent and captions

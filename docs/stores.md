@@ -3,7 +3,7 @@
 Checked Oct 25, 2026. Nothing has been submitted to any store.
 
 | Store | Built locally | Store lint | Submitted | Blocker |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | GitHub Releases | APK, Flatpak bundle, .deb | n/a | Published as v0.1.0-beta prerelease | None |
 | Flathub | Yes (GNOME 51 runtime) | See release notes | No (parked, owner Bowie) | AI policy, see below |
 | winget | No (needs Windows CI build) | Not run | No | Needs a release URL |

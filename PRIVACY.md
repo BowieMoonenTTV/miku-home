@@ -28,6 +28,6 @@ The app collects nothing, so there is nothing to collect from children.
 
 ## Contact
 
-Open an issue at https://github.com/BowieMoonenTTV/miku-home/issues. For security problems see [SECURITY.md](SECURITY.md).
+Open an issue at <https://github.com/BowieMoonenTTV/miku-home/issues>. For security problems see [SECURITY.md](SECURITY.md).
 
 Last updated: 2026-10-25.

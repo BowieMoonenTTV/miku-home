@@ -4,4 +4,5 @@ config:
   MD033: false
   MD041: false
   MD024: { siblings_only: true }
-ignores: [node_modules, app/vendor]
+  MD025: { front_matter_title: "" }
+ignores: ["**/node_modules/**", app/vendor, desktop/src-tauri/target, mobile/android]
