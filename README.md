@@ -39,6 +39,8 @@ Automated tests cannot prove accessibility. Please [open an issue](https://githu
 
 ## Quick start
 
+Project status (current release, downloads, testing and store plans): <https://bowiemoonenttv.github.io/miku-home/status.html>
+
 Use it in a browser: open <https://bowiemoonenttv.github.io/miku-home/>, or run it yourself:
 
 ```bash
