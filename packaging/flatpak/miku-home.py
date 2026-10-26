@@ -17,7 +17,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("WebKit", "6.0")
 from gi.repository import Gtk, WebKit  # noqa: E402
 
-APP_ID = "io.github.BowieMoonenTTV.MikuHome"
+APP_ID = "io.github.bowiemoonenttv.miku-home"
 APP_DIR = "/app/share/miku-home/app"
 
 

@@ -37,6 +37,4 @@ jobs:
           fi
       - uses: actions/upload-artifact@v4
         with: { name: apk, path: "miku-home*.apk" }
-      - if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with: { files: "miku-home*.apk", prerelease: true }
+      # The release APK is built and attached by the maintainer; CI output is a build check artifact.

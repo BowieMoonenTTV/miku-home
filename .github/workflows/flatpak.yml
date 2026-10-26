@@ -14,9 +14,9 @@ jobs:
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           bundle: miku-home.flatpak
-          manifest-path: packaging/flatpak/io.github.BowieMoonenTTV.MikuHome.yml
+          manifest-path: packaging/flatpak/io.github.bowiemoonenttv.miku-home.yml
           cache-key: flatpak-${{ github.sha }}
       - name: flatpak-builder-lint
         run: |
-          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flatpak/io.github.BowieMoonenTTV.MikuHome.yml || true
-          flatpak run --command=flatpak-builder-lint org.flatpak.Builder appstream packaging/flatpak/io.github.BowieMoonenTTV.MikuHome.metainfo.xml
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flatpak/io.github.bowiemoonenttv.miku-home.yml || true
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder appstream packaging/flatpak/io.github.bowiemoonenttv.miku-home.metainfo.xml

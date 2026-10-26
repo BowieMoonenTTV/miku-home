@@ -13,7 +13,7 @@ cask "miku-home" do
   app "Miku Home.app"
 
   zap trash: [
-    "~/Library/Application Support/io.github.BowieMoonenTTV.MikuHome",
-    "~/Library/WebKit/io.github.BowieMoonenTTV.MikuHome",
+    "~/Library/Application Support/io.github.bowiemoonenttv.miku-home",
+    "~/Library/WebKit/io.github.bowiemoonenttv.miku-home",
   ]
 end

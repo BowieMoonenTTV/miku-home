@@ -1,6 +1,6 @@
 # Local build manifest (builds from this checkout). For the Flathub submission,
-# flathub/io.github.BowieMoonenTTV.MikuHome.yml uses a git tag + commit instead.
-id: io.github.BowieMoonenTTV.MikuHome
+# flathub/io.github.bowiemoonenttv.miku-home.yml uses a git tag + commit instead.
+id: io.github.bowiemoonenttv.miku-home
 runtime: org.gnome.Platform
 runtime-version: '51'
 sdk: org.gnome.Sdk

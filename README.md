@@ -39,7 +39,7 @@ Automated tests cannot prove accessibility. Please [open an issue](https://githu
 
 ## Quick start
 
-Use it in a browser: open the staging site (see Downloads), or run it yourself:
+Use it in a browser: open <https://bowiemoonenttv.github.io/miku-home/>, or run it yourself:
 
 ```bash
 npm ci
@@ -55,10 +55,13 @@ On a **Steam Deck / SteamOS**: switch to Desktop Mode, open the site in a browse
 
 | Platform | Status |
 | --- | --- |
-| Web (PWA) | Staging: <https://miku-home.vercel.app/> (GitHub Pages once the repo exists) |
-| Android APK | Planned for v0.1.0-beta, built in CI, sideload |
-| Linux Flatpak | Manifest in `packaging/flatpak`, bundle built in CI |
-| Windows / macOS / Linux desktop | Tauri builds, unsigned for now; see [docs/signing.md](docs/signing.md) for the warnings you will see |
+| Web (PWA) | <https://bowiemoonenttv.github.io/miku-home/> (GitHub Pages). Mirror: <https://miku-home.vercel.app/> |
+| Android APK | [v0.1.0-beta prerelease](https://github.com/BowieMoonenTTV/miku-home/releases/tag/v0.1.0-beta): signed, sideload. Not yet tested with TalkBack on a phone |
+| Linux Flatpak | Bundle on the [release page](https://github.com/BowieMoonenTTV/miku-home/releases/tag/v0.1.0-beta). Not on Flathub |
+| Linux .deb | On the [release page](https://github.com/BowieMoonenTTV/miku-home/releases/tag/v0.1.0-beta) |
+| Windows / macOS | Built by CI (Tauri), unsigned; see [docs/signing.md](docs/signing.md) for the warnings you will see |
+
+Check downloads against `SHA256SUMS` on the release page.
 
 See the [Installation wiki page](docs/wiki/Installation.md).
 

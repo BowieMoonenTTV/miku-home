@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.BowieMoonenTTV.MikuHome</id>
+  <id>io.github.bowiemoonenttv.miku-home</id>
   <name>Miku Home</name>
   <summary>Accessible voice assistant that runs on your device</summary>
   <metadata_license>CC0-1.0</metadata_license>
@@ -17,7 +17,7 @@
       <li>High-contrast, keyboard-first design tested with Orca.</li>
     </ul>
   </description>
-  <launchable type="desktop-id">io.github.BowieMoonenTTV.MikuHome.desktop</launchable>
+  <launchable type="desktop-id">io.github.bowiemoonenttv.miku-home.desktop</launchable>
   <url type="homepage">https://github.com/BowieMoonenTTV/miku-home</url>
   <url type="bugtracker">https://github.com/BowieMoonenTTV/miku-home/issues</url>
   <url type="vcs-browser">https://github.com/BowieMoonenTTV/miku-home</url>

@@ -15,4 +15,4 @@
 - Local error log with view, copy and export.
 - Strict CSP, offline service worker, privacy page.
 - Tests: html-validate, unit, Playwright end-to-end with a zero-external-request check, axe-core, pa11y.
-- Staging: https://miku-home.vercel.app/ (Vercel, fallback until GitHub Pages).
+- Web: https://bowiemoonenttv.github.io/miku-home/ (GitHub Pages); mirror https://miku-home.vercel.app/.
