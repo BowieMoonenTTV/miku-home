@@ -18,5 +18,6 @@ jobs:
           cache-key: flatpak-${{ github.sha }}
       - name: flatpak-builder-lint
         run: |
+          flatpak install -y --noninteractive flathub org.flatpak.Builder
           flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flatpak/io.github.bowiemoonenttv.miku-home.yml || true
           flatpak run --command=flatpak-builder-lint org.flatpak.Builder appstream packaging/flatpak/io.github.bowiemoonenttv.miku-home.metainfo.xml
