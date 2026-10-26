@@ -61,6 +61,11 @@ class MikuHome(Gtk.Application):
         if win:
             win.present()
             return
+        # The sandbox has no network (no --share=network). GLib's proxy portal refuses lookups
+        # from such apps ("This call is not available inside the sandbox"), and WebKit then
+        # shows that error instead of loading even 127.0.0.1. The app only talks to its own
+        # local server, so it never needs a proxy.
+        WebKit.NetworkSession.get_default().set_proxy_settings(WebKit.NetworkProxyMode.NO_PROXY, None)
         win = Gtk.ApplicationWindow(application=self, title="Miku Home")
         win.set_default_size(1000, 760)
         view = WebKit.WebView()

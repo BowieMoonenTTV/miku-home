@@ -1,17 +1,17 @@
 import { config } from "./config.js";
 import { localReply } from "./replies.js";
-import { speak, stopSpeaking, whenVoicesReady, localVoices } from "./tts.js";
+import { speak, stopSpeaking, whenVoicesReady, localVoices, pickVoice, clampRate, engineName } from "./tts.js";
 import { sttSupported, startListening } from "./stt.js";
 import { installLocalCrashLog, logAsText, clearLog, record } from "./crash.js";
 
 installLocalCrashLog();
 const $ = (id) => document.getElementById(id);
 const els = {
-  mode: $("mode-status"), speak: $("speak-btn"), speakLabel: document.querySelector(".speak-label"), input: $("text-input"), send: $("send-btn"),
+  mode: $("mode-status"), speak: $("speak-btn"), speakState: document.querySelector(".speak-state"), input: $("text-input"), send: $("send-btn"),
   log: $("caption-log"), repeat: $("repeat-btn"), clear: $("clear-btn"), voice: $("voice-select"), rate: $("rate-input"),
-  rateOut: $("rate-value"), speakToggle: $("speak-toggle"), avatarToggle: $("avatar-toggle"), stage: $("avatar-stage"),
+  rateOut: $("rate-value"), speakToggle: $("speak-toggle"), srToggle: $("sr-toggle"), replyLive: $("reply-live"), avatarToggle: $("avatar-toggle"), stage: $("avatar-stage"),
   axe: $("axe-btn"), axeOut: $("axe-result"), sttStatus: $("stt-status"), crashView: $("crash-view"), crashText: $("crash-text"),
-  crashCopy: $("crash-copy"), crashExport: $("crash-export"), crashClear: $("crash-clear"), haToken: $("ha-token"), haSave: $("ha-save"),
+  crashCopy: $("crash-copy"), crashExport: $("crash-export"), crashClear: $("crash-clear"), haToken: $("ha-token"), haSave: $("ha-save"), avatarState: $("avatar-state"),
 };
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let lastReply = "";
@@ -46,27 +46,68 @@ async function getReply(text) {
   return localReply(text, { name: config.userName, assistant: config.assistantName });
 }
 
+// Avatar state, shown as plain visible text next to the (aria-hidden) avatar. It is not a
+// live region, so screen readers are not interrupted; captions carry the real content.
+const AVATAR_TEXT = { idle: "Avatar: resting.", listening: "Avatar: listening.", thinking: "Avatar: thinking.", speaking: "Avatar: talking." };
+let avatarTimer = null;
+function avatarState(s) {
+  clearTimeout(avatarTimer);
+  if (avatar) avatar.setState(s);
+  if (els.avatarState && !els.avatarState.hidden) els.avatarState.textContent = AVATAR_TEXT[s] || AVATAR_TEXT.idle;
+}
+const isGreeting = (t) => /^\s*(say\s+)?(hi|hello|hey|good (morning|afternoon|evening))\b/i.test(t);
+
 async function handle(text) {
   text = String(text || "").trim();
   if (!text) return;
   addCaption(config.userName, text);
+  avatarState("thinking");
   const reply = await getReply(text);
+  if (avatar && isGreeting(text)) avatar.gesture("wave");
   respond(reply);
 }
 
+// Screen reader announcement for replies. The visible caption log is NOT a live region, so a
+// reply is announced only here, and only when Miku's own voice is not already speaking it.
+let liveTimer = null;
+function announce(text) {
+  clearTimeout(liveTimer);
+  els.replyLive.textContent = "";
+  // Re-set after a short delay so a repeated, identical reply is still announced.
+  // setTimeout, not requestAnimationFrame: animation frames pause in background or hidden windows.
+  setTimeout(() => { els.replyLive.textContent = text; }, 100);
+  // Clear afterwards so the hidden copy does not show up twice when browsing the page.
+  liveTimer = setTimeout(() => { els.replyLive.textContent = ""; }, 7000);
+}
+
+// The ONE place Miku speaks. Every reply (typed, spoken, repeated) uses the same saved
+// speed and the same voice, so the speaking speed is the same everywhere in the app.
 function respond(reply) {
   lastReply = reply;
   addCaption(config.assistantName, reply);
-  if (!els.speakToggle.checked) return;
-  speak(reply, {
-    voiceURI: prefs.voice, rate: Number(prefs.rate || 1),
+  const rate = clampRate(prefs.rate);
+  if (avatar) avatar.setRate(rate);
+  const appVoice = els.speakToggle.checked && !els.srToggle.checked && speak(reply, {
+    voiceURI: prefs.voice, rate,
+    onStart: () => avatarState("speaking"),
     onBoundary: (e) => { if (avatar && e.name === "word") avatar.sayWord(reply.substr(e.charIndex, e.charLength || reply.slice(e.charIndex).search(/\s|$/))); },
+    onEnd: () => avatarState("idle"),
+    onError: (err) => { record("tts", (err && (err.error || err.message)) || "speech failed"); avatarState("idle"); announce(config.assistantName + ": " + reply); },
   });
+  if (appVoice) { avatarState("speaking"); return; }
+  announce(config.assistantName + ": " + reply);
+  // No app voice (screen reader mode, voice off, or no on-device voice): the avatar still
+  // "talks" for about as long as the reply takes to read, then rests.
+  avatarState("speaking");
+  const words = reply.split(/\s+/).filter(Boolean).length;
+  avatarTimer = setTimeout(() => avatarState("idle"), Math.min(8000, 600 + words * 330 / rate));
 }
 
 function setListening(on) {
   els.speak.setAttribute("aria-pressed", on ? "true" : "false");
-  els.speakLabel.textContent = on ? "Stop" : "Speak";
+  // The accessible name stays "Speak"; state is exposed only through aria-pressed.
+  els.speakState.textContent = on ? "Listening, press again to stop" : "";
+  avatarState(on ? "listening" : "idle");
 }
 
 async function toggleListening() {
@@ -80,7 +121,7 @@ async function toggleListening() {
       onPartial: () => { els.sttStatus.textContent = "Listening…"; },
       onFinal: (t) => { els.sttStatus.textContent = t ? "Heard you." : "I didn't hear anything. You can type instead."; if (t) handle(t); },
     });
-    els.sttStatus.textContent = "Listening. Press Stop when you're done.";
+    els.sttStatus.textContent = "Listening. Press Speak again when you're done.";
   } catch (e) {
     stopRec = null; setListening(false); record("stt", e.message);
     els.sttStatus.textContent = "Voice input couldn't start (" + (e.name === "NotAllowedError" ? "microphone permission was denied" : e.message) + "). Please type instead.";
@@ -95,14 +136,27 @@ els.send.addEventListener("click", sendTyped);
 els.input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); sendTyped(); } });
 els.repeat.addEventListener("click", () => { if (lastReply) respond(lastReply); else els.sttStatus.textContent = "There's no reply to repeat yet."; });
 els.clear.addEventListener("click", () => { els.log.textContent = ""; els.sttStatus.textContent = "Captions cleared."; });
-els.rate.value = prefs.rate || "1"; els.rateOut.textContent = Number(els.rate.value).toFixed(1) + " times";
-els.rate.addEventListener("input", () => { prefs.rate = els.rate.value; els.rateOut.textContent = Number(els.rate.value).toFixed(1) + " times"; savePrefs(); });
-els.speakToggle.checked = prefs.speak !== false;
-els.speakToggle.addEventListener("change", () => { prefs.speak = els.speakToggle.checked; savePrefs(); });
+// One speaking-speed setting, saved on this device, applied to every utterance.
+prefs.rate = clampRate(prefs.rate);
+els.rate.value = String(prefs.rate); els.rateOut.textContent = prefs.rate.toFixed(1) + " times";
+els.rate.addEventListener("input", () => { prefs.rate = clampRate(els.rate.value); els.rateOut.textContent = prefs.rate.toFixed(1) + " times"; savePrefs(); });
+els.srToggle.checked = prefs.sr === true;
+els.speakToggle.checked = prefs.speak !== false && !els.srToggle.checked;
+els.speakToggle.addEventListener("change", () => {
+  prefs.speak = els.speakToggle.checked;
+  if (els.speakToggle.checked && els.srToggle.checked) { els.srToggle.checked = false; prefs.sr = false; }
+  savePrefs();
+});
+els.srToggle.addEventListener("change", () => {
+  prefs.sr = els.srToggle.checked;
+  if (els.srToggle.checked) { stopSpeaking(); els.speakToggle.checked = false; prefs.speak = false; }
+  savePrefs();
+  els.sttStatus.textContent = els.srToggle.checked ? "Your screen reader will read replies. Miku's voice is off." : "Your screen reader will no longer read replies.";
+});
 els.voice.addEventListener("change", () => { prefs.voice = els.voice.value; savePrefs(); });
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { stopSpeaking(); if (stopRec) toggleListening(); return; }
+  if (e.key === "Escape") { stopSpeaking(); avatarState("idle"); if (stopRec) toggleListening(); return; }
   if (!(e.altKey && e.shiftKey)) return;
   const k = e.code;
   if (k === "KeyS") { e.preventDefault(); toggleListening(); }
@@ -111,15 +165,29 @@ document.addEventListener("keydown", (e) => {
   else if (k === "KeyR") { e.preventDefault(); els.repeat.click(); }
 });
 
-// Avatar is opt-in and decorative.
-els.avatarToggle.checked = !!prefs.avatar && !reducedMotion;
-els.stage.hidden = !els.avatarToggle.checked;
+// Avatar is opt-in and decorative. Reduced motion no longer switches it off (that left it
+// unchecked on every load); it gets calm, still poses instead of animation.
+els.avatarToggle.checked = !!prefs.avatar;
+function showAvatarUi(on) { els.stage.hidden = !on; els.avatarState.hidden = !on; if (on) els.avatarState.textContent = AVATAR_TEXT[avatar ? avatar.state : "idle"]; }
+showAvatarUi(els.avatarToggle.checked);
+let avatarLoading = null;
 async function ensureAvatar() {
   if (avatar || !els.avatarToggle.checked) return;
-  try { const m = await import("./avatar.js"); avatar = await m.createAvatar(els.stage, { vrmPath: config.vrmPath, reducedMotion }); }
-  catch (e) { record("avatar", e.message); els.stage.hidden = true; }
+  if (avatarLoading) return avatarLoading;
+  avatarLoading = (async () => {
+    try {
+      const m = await import("./avatar.js");
+      avatar = await m.createAvatar(els.stage, { vrmPath: config.vrmPath, reducedMotion });
+      avatar.setRate(clampRate(prefs.rate));
+      avatar.gesture("wave"); // hello
+    } catch (e) {
+      record("avatar", e.message); els.stage.hidden = true;
+      els.avatarState.hidden = false; els.avatarState.textContent = "The avatar couldn't start on this device. Everything else works; captions are unchanged.";
+    } finally { avatarLoading = null; }
+  })();
+  return avatarLoading;
 }
-els.avatarToggle.addEventListener("change", () => { prefs.avatar = els.avatarToggle.checked; savePrefs(); els.stage.hidden = !els.avatarToggle.checked; ensureAvatar(); });
+els.avatarToggle.addEventListener("change", () => { prefs.avatar = els.avatarToggle.checked; savePrefs(); showAvatarUi(els.avatarToggle.checked); ensureAvatar(); });
 ensureAvatar();
 
 // Local crash log
@@ -147,7 +215,12 @@ async function detectMode() {
   const voices = await whenVoicesReady();
   els.voice.textContent = "";
   if (!voices.length) { const o = new Option("No on-device voice found: captions only", ""); els.voice.add(o); }
-  for (const v of voices) { const o = new Option(`${v.name} (${v.lang})`, v.voiceURI); if (v.voiceURI === prefs.voice) o.selected = true; els.voice.add(o); }
+  // Pin one voice once voices have loaded, so every reply uses the same voice (and so the
+  // same natural speed) instead of whichever voice happened to load first.
+  const chosen = pickVoice(voices, prefs.voice);
+  if (chosen && chosen.voiceURI !== prefs.voice) { prefs.voice = chosen.voiceURI; savePrefs(); }
+  const sorted = [...voices].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  for (const v of sorted) { const o = new Option(`${v.name} (${v.lang})`, v.voiceURI); if (chosen && v.voiceURI === chosen.voiceURI) o.selected = true; els.voice.add(o); }
   const listen = sttSupported() ? "Listening: on this device" : "Listening: not available here, type instead";
   els.mode.textContent = `Mode: ${parts.length ? parts.join(" + ") : "Standalone"}. ${voices.length ? "Spoken replies: on-device voice" : "Spoken replies: off, no on-device voice found, captions only"}. ${listen}.`;
 }
@@ -156,4 +229,4 @@ detectMode();
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("sw.js").catch((e) => record("sw", e.message));
 }
-window.__miku = { handle, localVoices };
+window.__miku = { handle, localVoices, engineName, get avatar() { return avatar; }, get prefs() { return { ...prefs }; } };
