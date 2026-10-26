@@ -33,7 +33,7 @@ Target: **WCAG 2.2 AA**. What we do:
 - Captions always visible in a log; replies announced through a polite live region only when Miku's voice is off or unavailable (no double speech); status messages in `role="status"`.
 - The Speak button always has the name "Speak" and reports listening with `aria-pressed`.
 - `prefers-reduced-motion` replaces avatar animation with still poses; nothing flashes.
-- One speaking-speed setting applies to every reply, and one on-device voice is pinned once voices have loaded, so Miku's speed is the same everywhere. The Android app uses Android's own on-device text-to-speech (the Android WebView has no Web Speech API).
+- One speaking-speed setting applies to every reply, and one on-device voice is pinned once voices have loaded, so Miku's speed is the same everywhere. Android builds made from `main` use Android's own on-device text-to-speech (the Android WebView has no Web Speech API); the v0.1.0-beta APK predates this and speaks no replies itself. Not yet tested on a phone.
 - Every voice action has a typed equivalent.
 - Tested with axe-core, pa11y (HTML_CodeSniffer + axe) and html-validate on every push.
 - Manual screen reader testing is **pending**: Orca (Linux), TalkBack on a phone (Android), VoiceOver (iOS) and braille have not been tested yet. See [Testing status](#testing-status) and [ROADMAP.md](ROADMAP.md) for the gates.
@@ -69,6 +69,8 @@ On a **Steam Deck / SteamOS**: switch to Desktop Mode, open the site in a browse
 | Windows | [Miku.Home_0.1.0-beta_x64-setup.exe](https://github.com/BowieMoonenTTV/miku-home/releases/download/v0.1.0-beta/Miku.Home_0.1.0-beta_x64-setup.exe). **Unsigned, not built by CI from the v0.1.0-beta tag, untested.** Built by a manual CI run from `main` (see below). Windows will warn you, and it has not been run on a real PC; see [docs/signing.md](docs/signing.md) |
 | macOS | [Miku.Home_0.1.0-beta_universal.dmg](https://github.com/BowieMoonenTTV/miku-home/releases/download/v0.1.0-beta/Miku.Home_0.1.0-beta_universal.dmg). **Unsigned, not built by CI from the v0.1.0-beta tag, untested.** Built by a manual CI run from `main` (see below). macOS will warn you, and it has not been run on a real Mac |
 | Linux AppImage | [Miku.Home_0.1.0-beta_amd64.AppImage](https://github.com/BowieMoonenTTV/miku-home/releases/download/v0.1.0-beta/Miku.Home_0.1.0-beta_amd64.AppImage). **Unsigned, not built by CI from the v0.1.0-beta tag, untested.** Built by a manual CI run from `main` (see below). Not yet run on a real desktop |
+
+The v0.1.0-beta files predate the screen reader mode, the speaking-speed and avatar changes, and Android speech, which are on `main` only.
 
 How the v0.1.0-beta files were made: the CI release build for the `v0.1.0-beta` tag failed, so CI did not build this release from its tag. The Windows, macOS and AppImage files were added later by a manual run of the desktop workflow from `main` (commit `26e2362`, which only changes CI files compared with the tag). The APK, Flatpak and .deb were built outside CI and uploaded by hand.
 
