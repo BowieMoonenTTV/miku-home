@@ -12,7 +12,10 @@ jobs:
         with: { node-version: 22 }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
-      - uses: android-actions/setup-android@v3
+      # ubuntu-latest ships the Android SDK at $ANDROID_HOME; just add what Capacitor 8 needs.
+      - run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
       - name: Generate Android project
         working-directory: mobile
         run: npm ci && npx cap add android && node patch-android.mjs && pip install pillow && python3 brand-android.py && npx cap sync android
