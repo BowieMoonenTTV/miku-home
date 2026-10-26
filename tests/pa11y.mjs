@@ -4,7 +4,7 @@ import { createMikuServer } from "../server/server.js";
 let base = process.env.BASE_URL, server;
 if (!base) { server = createMikuServer(); await new Promise((r) => server.listen(0, "127.0.0.1", r)); base = `http://127.0.0.1:${server.address().port}/`; }
 let failed = 0;
-for (const path of ["", "privacy.html"]) {
+for (const path of ["", "privacy.html", "status.html"]) {
   const r = await pa11y(base + path, { standard: "WCAG2AA", runners: ["htmlcs", "axe"], includeWarnings: false, timeout: 60000,
     chromeLaunchConfig: { executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome", args: ["--no-sandbox"] } });
   const errs = r.issues.filter((i) => i.type === "error");

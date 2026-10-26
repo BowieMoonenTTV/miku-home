@@ -114,6 +114,17 @@ await ppage.addScriptTag({ url: base + "vendor/axe-core/axe.min.js" });
 const axeP = await ppage.evaluate(async () => { const r = await window.axe.run(document, { runOnly: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa", "best-practice"] }); return r.violations.map((v) => v.id); }).catch((e) => ["(could not inject: " + e.message.split("\n")[0] + ")"]);
 check("privacy page axe: 0 violations", axeP.length === 0, axeP.join(", ") || "none");
 
+// Project status page: same static, script-free audit plus a content check.
+const spage = await pctx.newPage();
+spage.on("request", (r) => { const u = r.url(); if (!u.startsWith(origin) && !u.startsWith("data:")) external.push(u); });
+const sres = await spage.goto(base + "status.html", { waitUntil: "networkidle" });
+const sText = await spage.textContent("main");
+const sHeads = await spage.$$eval("h1, h2", (h) => h.map((x) => x.textContent.trim()));
+check("status page loads with release, testing, stores and team sections", sres.ok() && /0\.1\.0-beta/.test(sText) && ["Project status", "Current release", "Testing", "App stores", "Team"].every((h) => sHeads.includes(h)), sHeads.join(" / "));
+await spage.addScriptTag({ url: base + "vendor/axe-core/axe.min.js" });
+const axeS = await spage.evaluate(async () => { const r = await window.axe.run(document, { runOnly: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa", "best-practice"] }); return r.violations.map((v) => v.id); }).catch((e) => ["(could not inject: " + e.message.split("\n")[0] + ")"]);
+check("status page axe: 0 violations", axeS.length === 0, axeS.join(", ") || "none");
+
 check("ZERO external requests", external.length === 0, external.length ? external.join(", ") : "no request left " + origin);
 check("no console errors", consoleErrors.filter((e) => !/^Failed to load resource/.test(e)).length === 0, consoleErrors.join(" | ").slice(0, 500));
 await browser.close(); server?.close();
