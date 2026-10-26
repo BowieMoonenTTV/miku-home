@@ -4,12 +4,13 @@
 
 ### Fixed
 
-- No double speech with a screen reader: the caption log is no longer a live region; replies are announced through a separate polite live region only when Miku's own voice is not speaking them.
+- No double speech with a screen reader: the caption log is no longer a live region; replies are announced through a separate polite live region. Turning on "Let my screen reader read replies" turns Miku's own voice off.
 - Speak button keeps the accessible name "Speak" and uses `aria-pressed` only; the visible "listening" hint is hidden from screen readers.
 - Inconsistent speaking speed: the voice is now chosen deterministically after voices finish loading and saved, so replies no longer switch between voices with different natural speeds; the saved speed is validated and applied to every utterance; the utterance language is set to match the voice; long replies are split into short chunks with the same voice and speed; speech after cancel waits a moment (Chrome bug).
 - Android app had no app voice at all (the Android WebView has no Web Speech API), so replies were read by the screen reader at its own speed. It now speaks through Android's on-device text-to-speech with the same speed setting.
 - Avatar was present but inert: it only moved its mouth on word-boundary events, which many engines (including Android) never send, did nothing while listening or thinking, and with reduced motion drew one frame and was switched off on every reload. It now reacts to listening, thinking and speaking.
-- Service worker cache bumped to `miku-v0.1.0-4` so installed copies pick up the fix.
+- Replies did not reach braille displays when Miku's voice was on (BUG-01): the reply was only put in the live region when Miku's own voice was not speaking. Every reply now goes to the live region exactly once, voice on or off, on the web and in the Android app. A voice error no longer announces the reply a second time. With Miku's voice on, a speaking screen reader also says the reply; "Let my screen reader read replies" turns Miku's voice off for one voice only.
+- Service worker cache bumped to `miku-v0.1.0-5` so installed copies pick up the fix.
 - Flatpak: the window showed "This call is not available inside the sandbox" instead of the app. The sandbox has no network, so the proxy lookup was refused; the launcher now tells WebKit not to use a proxy for its own local server.
 
 ### Added

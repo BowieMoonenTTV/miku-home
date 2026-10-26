@@ -67,15 +67,17 @@ async function handle(text) {
   respond(reply);
 }
 
-// Screen reader announcement for replies. The visible caption log is NOT a live region, so a
-// reply is announced only here, and only when Miku's own voice is not already speaking it.
-let liveTimer = null;
+// Screen reader and braille announcement for replies. The visible caption log is NOT a live
+// region, so every reply is announced here, exactly once, whether or not Miku's own voice is
+// speaking it. Braille displays only get what the screen reader is given, so skipping this
+// while Miku talks would leave braille users with nothing (BUG-01).
+let liveTimer = null, liveSetTimer = null;
 function announce(text) {
-  clearTimeout(liveTimer);
+  clearTimeout(liveTimer); clearTimeout(liveSetTimer);
   els.replyLive.textContent = "";
   // Re-set after a short delay so a repeated, identical reply is still announced.
   // setTimeout, not requestAnimationFrame: animation frames pause in background or hidden windows.
-  setTimeout(() => { els.replyLive.textContent = text; }, 100);
+  liveSetTimer = setTimeout(() => { els.replyLive.textContent = text; }, 100);
   // Clear afterwards so the hidden copy does not show up twice when browsing the page.
   liveTimer = setTimeout(() => { els.replyLive.textContent = ""; }, 7000);
 }
@@ -85,6 +87,8 @@ function announce(text) {
 function respond(reply) {
   lastReply = reply;
   addCaption(config.assistantName, reply);
+  // Always, and only once per reply: this is what reaches the screen reader and braille.
+  announce(config.assistantName + ": " + reply);
   const rate = clampRate(prefs.rate);
   if (avatar) avatar.setRate(rate);
   const appVoice = els.speakToggle.checked && !els.srToggle.checked && speak(reply, {
@@ -92,10 +96,10 @@ function respond(reply) {
     onStart: () => avatarState("speaking"),
     onBoundary: (e) => { if (avatar && e.name === "word") avatar.sayWord(reply.substr(e.charIndex, e.charLength || reply.slice(e.charIndex).search(/\s|$/))); },
     onEnd: () => avatarState("idle"),
-    onError: (err) => { record("tts", (err && (err.error || err.message)) || "speech failed"); avatarState("idle"); announce(config.assistantName + ": " + reply); },
+    // Already announced above, so a voice error must not announce the reply a second time.
+    onError: (err) => { record("tts", (err && (err.error || err.message)) || "speech failed"); avatarState("idle"); },
   });
   if (appVoice) { avatarState("speaking"); return; }
-  announce(config.assistantName + ": " + reply);
   // No app voice (screen reader mode, voice off, or no on-device voice): the avatar still
   // "talks" for about as long as the reply takes to read, then rests.
   avatarState("speaking");
