@@ -17,7 +17,7 @@ By **BowieMoonen**. MIT licensed. No ads, no accounts, no paid tiers.
 - **On-device speech input:** [Vosk](https://alphacephei.com/vosk/) runs in your browser through WebAssembly. Audio never leaves the device.
 - **On-device spoken replies:** only voices that your system marks as local (`localService`) are used. If none exist, Miku uses captions only and tells you.
 - **Captions for everything:** a caption log with times, plus repeat and clear buttons. Replies are announced to screen readers only when Miku's own voice is not speaking them, so you never hear a reply twice.
-- **Screen reader mode:** the setting "Let my screen reader read replies" turns Miku's voice off and lets Orca, NVDA, VoiceOver or TalkBack read each reply.
+- **Screen reader mode:** the setting "Let my screen reader read replies" turns Miku's voice off so your screen reader (for example Orca, NVDA, VoiceOver or TalkBack) reads each reply instead. Not yet tested with a real screen reader.
 - **Keyboard first:** Alt+Shift+S speak, Alt+Shift+T type, Alt+Shift+L last caption, Alt+Shift+R repeat, Escape stop.
 - **Optional avatar:** a three.js face with TalkingHead lip-sync, or your own VRM. Off by default; it respects reduced motion.
 - **Optional add-ons, auto-detected:** Home Assistant, Ollama or llama.cpp, Piper or Whisper servers, avatar packs. See [docs/addons](docs/addons/README.md).
