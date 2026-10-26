@@ -1,5 +1,5 @@
 // Offline-first service worker. Same-origin only; never caches or proxies third-party requests.
-const VERSION = "miku-v0.1.0";
+const VERSION = "miku-v0.1.0-2";
 const CORE = ["./", "index.html", "privacy.html", "styles.css", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
   "js/app.js", "js/config.js", "js/replies.js", "js/tts.js", "js/stt.js", "js/crash.js", "vendor/vosk-browser/vosk.js"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(CORE)).then(() => self.skipWaiting())); });

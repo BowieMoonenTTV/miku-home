@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- No double speech with a screen reader: the caption log is no longer a live region; replies are announced through a separate polite live region only when Miku's own voice is not speaking them.
+- Speak button keeps the accessible name "Speak" and uses `aria-pressed` only; the visible "listening" hint is hidden from screen readers.
+
+### Added
+
+- Setting "Let my screen reader read replies": turns off Miku's voice and lets the screen reader read each reply. Captions stay visible.
+- README warning that the Windows and macOS builds are unsigned.
+
 ## [0.1.0-beta] - 2026-10-25 (draft)
 
 - Android wrapper (Capacitor 8, `mobile/`): mic permission only, no INTERNET permission.

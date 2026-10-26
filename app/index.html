@@ -36,7 +36,7 @@
       <h2 id="talk-heading">Talk to Miku</h2>
 
       <button id="speak-btn" class="speak" type="button" aria-describedby="speak-help" aria-pressed="false">
-        <span class="speak-label">Speak</span>
+        <span class="speak-label">Speak</span><span class="speak-state" aria-hidden="true"></span>
       </button>
       <p id="stt-status" class="status" role="status" aria-live="polite"></p>
       <p id="speak-help" class="help">Press once to start listening and again to stop. Shortcut: Alt+Shift+S. If voice input is not available, type below.</p>
@@ -54,7 +54,8 @@
     <section aria-labelledby="captions-heading" class="captions">
       <h2 id="captions-heading" tabindex="-1">Captions</h2>
       <p class="help">Every spoken reply is written here. Shortcut: Alt+Shift+L.</p>
-      <ol id="caption-log" class="caption-log" aria-live="polite" aria-relevant="additions"></ol>
+      <ol id="caption-log" class="caption-log"></ol>
+      <p id="reply-live" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
       <div class="row">
         <button id="repeat-btn" type="button">Repeat last reply</button>
         <button id="clear-btn" type="button">Clear captions</button>
@@ -81,7 +82,9 @@
         <input id="rate-input" type="range" min="0.5" max="1.6" step="0.1" value="1" aria-describedby="rate-value">
         <output id="rate-value" for="rate-input">1.0 times</output>
       </div>
-      <label class="check"><input id="speak-toggle" type="checkbox" checked> Speak replies aloud</label>
+      <label class="check"><input id="speak-toggle" type="checkbox" checked> Speak replies aloud with Miku's voice</label>
+      <label class="check"><input id="sr-toggle" type="checkbox" aria-describedby="sr-help"> Let my screen reader read replies</label>
+      <p id="sr-help" class="help">Turns off Miku's own voice so your screen reader announces each reply instead, with no double speech. Captions stay visible either way.</p>
       <details>
         <summary>Keyboard shortcuts</summary>
         <ul>

@@ -24,7 +24,8 @@ button, select, input[type=text] { font: inherit; min-height: 48px; min-width: 4
 button { background: var(--panel); color: var(--fg); border: 2px solid var(--border); border-radius: 10px; padding: 0.5rem 1rem; cursor: pointer; }
 .speak { display: block; width: 100%; min-height: 6rem; font-size: 1.8rem; font-weight: 800; background: var(--accent); color: var(--accent-ink); border: 3px solid var(--border); border-radius: 16px; }
 .speak[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
-.speak[aria-pressed="true"] .speak-label::after { content: " (listening, press to stop)"; font-size: 1.1rem; }
+.speak-state { display: block; font-size: 1.1rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 .typed-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .typed-row input { flex: 1 1 14rem; background: var(--bg); color: var(--fg); border: 2px solid var(--border); border-radius: 10px; padding: 0.5rem 0.75rem; }
 label { display: block; font-weight: 600; margin-bottom: 0.3rem; }

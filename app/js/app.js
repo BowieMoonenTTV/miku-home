@@ -7,9 +7,9 @@ import { installLocalCrashLog, logAsText, clearLog, record } from "./crash.js";
 installLocalCrashLog();
 const $ = (id) => document.getElementById(id);
 const els = {
-  mode: $("mode-status"), speak: $("speak-btn"), speakLabel: document.querySelector(".speak-label"), input: $("text-input"), send: $("send-btn"),
+  mode: $("mode-status"), speak: $("speak-btn"), speakState: document.querySelector(".speak-state"), input: $("text-input"), send: $("send-btn"),
   log: $("caption-log"), repeat: $("repeat-btn"), clear: $("clear-btn"), voice: $("voice-select"), rate: $("rate-input"),
-  rateOut: $("rate-value"), speakToggle: $("speak-toggle"), avatarToggle: $("avatar-toggle"), stage: $("avatar-stage"),
+  rateOut: $("rate-value"), speakToggle: $("speak-toggle"), srToggle: $("sr-toggle"), replyLive: $("reply-live"), avatarToggle: $("avatar-toggle"), stage: $("avatar-stage"),
   axe: $("axe-btn"), axeOut: $("axe-result"), sttStatus: $("stt-status"), crashView: $("crash-view"), crashText: $("crash-text"),
   crashCopy: $("crash-copy"), crashExport: $("crash-export"), crashClear: $("crash-clear"), haToken: $("ha-token"), haSave: $("ha-save"),
 };
@@ -54,19 +54,32 @@ async function handle(text) {
   respond(reply);
 }
 
+// Screen reader announcement for replies. The visible caption log is NOT a live region, so a
+// reply is announced only here, and only when Miku's own voice is not already speaking it.
+let liveTimer = null;
+function announce(text) {
+  clearTimeout(liveTimer);
+  els.replyLive.textContent = "";
+  // Re-set on the next frame so a repeated, identical reply is still announced.
+  requestAnimationFrame(() => { els.replyLive.textContent = text; });
+  // Clear afterwards so the hidden copy does not show up twice when browsing the page.
+  liveTimer = setTimeout(() => { els.replyLive.textContent = ""; }, 7000);
+}
+
 function respond(reply) {
   lastReply = reply;
   addCaption(config.assistantName, reply);
-  if (!els.speakToggle.checked) return;
-  speak(reply, {
+  const appVoice = els.speakToggle.checked && !els.srToggle.checked && speak(reply, {
     voiceURI: prefs.voice, rate: Number(prefs.rate || 1),
     onBoundary: (e) => { if (avatar && e.name === "word") avatar.sayWord(reply.substr(e.charIndex, e.charLength || reply.slice(e.charIndex).search(/\s|$/))); },
   });
+  if (!appVoice) announce(config.assistantName + ": " + reply);
 }
 
 function setListening(on) {
   els.speak.setAttribute("aria-pressed", on ? "true" : "false");
-  els.speakLabel.textContent = on ? "Stop" : "Speak";
+  // The accessible name stays "Speak"; state is exposed only through aria-pressed.
+  els.speakState.textContent = on ? "Listening, press again to stop" : "";
 }
 
 async function toggleListening() {
@@ -80,7 +93,7 @@ async function toggleListening() {
       onPartial: () => { els.sttStatus.textContent = "Listening…"; },
       onFinal: (t) => { els.sttStatus.textContent = t ? "Heard you." : "I didn't hear anything. You can type instead."; if (t) handle(t); },
     });
-    els.sttStatus.textContent = "Listening. Press Stop when you're done.";
+    els.sttStatus.textContent = "Listening. Press Speak again when you're done.";
   } catch (e) {
     stopRec = null; setListening(false); record("stt", e.message);
     els.sttStatus.textContent = "Voice input couldn't start (" + (e.name === "NotAllowedError" ? "microphone permission was denied" : e.message) + "). Please type instead.";
@@ -97,8 +110,19 @@ els.repeat.addEventListener("click", () => { if (lastReply) respond(lastReply); 
 els.clear.addEventListener("click", () => { els.log.textContent = ""; els.sttStatus.textContent = "Captions cleared."; });
 els.rate.value = prefs.rate || "1"; els.rateOut.textContent = Number(els.rate.value).toFixed(1) + " times";
 els.rate.addEventListener("input", () => { prefs.rate = els.rate.value; els.rateOut.textContent = Number(els.rate.value).toFixed(1) + " times"; savePrefs(); });
-els.speakToggle.checked = prefs.speak !== false;
-els.speakToggle.addEventListener("change", () => { prefs.speak = els.speakToggle.checked; savePrefs(); });
+els.srToggle.checked = prefs.sr === true;
+els.speakToggle.checked = prefs.speak !== false && !els.srToggle.checked;
+els.speakToggle.addEventListener("change", () => {
+  prefs.speak = els.speakToggle.checked;
+  if (els.speakToggle.checked && els.srToggle.checked) { els.srToggle.checked = false; prefs.sr = false; }
+  savePrefs();
+});
+els.srToggle.addEventListener("change", () => {
+  prefs.sr = els.srToggle.checked;
+  if (els.srToggle.checked) { stopSpeaking(); els.speakToggle.checked = false; prefs.speak = false; }
+  savePrefs();
+  els.sttStatus.textContent = els.srToggle.checked ? "Your screen reader will read replies. Miku's voice is off." : "Your screen reader will no longer read replies.";
+});
 els.voice.addEventListener("change", () => { prefs.voice = els.voice.value; savePrefs(); });
 
 document.addEventListener("keydown", (e) => {

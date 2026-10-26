@@ -16,7 +16,8 @@ By **BowieMoonen**. MIT licensed. No ads, no accounts, no paid tiers.
 - **Works today with no server:** open the page, type or press **Speak**, and Miku answers with captions.
 - **On-device speech input:** [Vosk](https://alphacephei.com/vosk/) runs in your browser through WebAssembly. Audio never leaves the device.
 - **On-device spoken replies:** only voices that your system marks as local (`localService`) are used. If none exist, Miku uses captions only and tells you.
-- **Captions for everything:** an `aria-live` caption log with times, plus repeat and clear buttons.
+- **Captions for everything:** a caption log with times, plus repeat and clear buttons. Replies are announced to screen readers only when Miku's own voice is not speaking them, so you never hear a reply twice.
+- **Screen reader mode:** the setting "Let my screen reader read replies" turns Miku's voice off and lets Orca, NVDA, VoiceOver or TalkBack read each reply.
 - **Keyboard first:** Alt+Shift+S speak, Alt+Shift+T type, Alt+Shift+L last caption, Alt+Shift+R repeat, Escape stop.
 - **Optional avatar:** a three.js face with TalkingHead lip-sync, or your own VRM. Off by default; it respects reduced motion.
 - **Optional add-ons, auto-detected:** Home Assistant, Ollama or llama.cpp, Piper or Whisper servers, avatar packs. See [docs/addons](docs/addons/README.md).
@@ -29,7 +30,8 @@ Target: **WCAG 2.2 AA**. What we do:
 
 - Skip link, visible 4px focus outline, forced-colours (high contrast) support.
 - Touch targets of at least 48 by 48 pixels; the Speak button is much larger.
-- Captions in an `aria-live="polite"` log; status messages in `role="status"`.
+- Captions always visible in a log; replies announced through a polite live region only when Miku's voice is off or unavailable (no double speech); status messages in `role="status"`.
+- The Speak button always has the name "Speak" and reports listening with `aria-pressed`.
 - `prefers-reduced-motion` stops all avatar animation.
 - Every voice action has a typed equivalent.
 - Tested with axe-core, pa11y (HTML_CodeSniffer + axe) and html-validate on every push.
@@ -52,6 +54,8 @@ The microphone only works on `https://` or `localhost`. To use it from your phon
 On a **Steam Deck / SteamOS**: switch to Desktop Mode, open the site in a browser and install it, or add the browser as a non-Steam game with the site URL. Orca and braille on SteamOS are not update-safe because the system image is read-only and is replaced on update.
 
 ## Downloads
+
+> **Warning: the Windows and macOS builds are unsigned.** Windows will show a SmartScreen warning ("Windows protected your PC") and macOS will show a Gatekeeper warning saying the app cannot be opened or is from an unidentified developer. This is expected for now. Only install them if you downloaded them from this repository's release page and the checksum matches `SHA256SUMS`. On Windows choose "More info", then "Run anyway". On macOS open System Settings, Privacy and Security, and choose "Open Anyway".
 
 | Platform | Status |
 | --- | --- |
