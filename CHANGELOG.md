@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Documentation — 2026-11-14
+
+- Refreshed the public status page with verified project URLs, repository paths, deployment/test history and a dated update log.
+- Distinguished the original beta, PR5 test prerelease and current source. Recorded six open pull requests without claiming their fixes were merged.
+- Kept manual screen-reader, braille and device testing pending; historical automated counts are no longer presented as current.
+- Made the existing no-local-voice browser test deterministic on Windows; local/native voice behavior remains covered by separate fixtures.
+- Bumped the service-worker cache to `miku-v0.1.0-status-20261114` so installed web apps can receive the new status page. No package release was created.
+
 ### Fixed
 
 - No double speech with a screen reader: the caption log is no longer a live region; replies are announced through a separate polite live region only when Miku's own voice is not speaking them.

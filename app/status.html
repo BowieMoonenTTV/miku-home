@@ -12,10 +12,24 @@
   <a class="skip-link" href="#main">Skip to the project status</a>
   <main id="main" tabindex="-1">
     <h1>Project status</h1>
-    <p>Updated <time datetime="2026-10-25T22:00-04:00">October 25, 2026, 10:00 PM Eastern Time</time>.</p>
+    <p>Reviewed <time datetime="2026-11-14">November 14, 2026</time> (America/Toronto). This is a dated project snapshot, not live monitoring.</p>
+
+    <nav aria-label="Status sections"><ul class="site-nav"><li><a href="#project-links">Project links</a></li><li><a href="#testing">Testing</a></li><li><a href="#open-work">Open work</a></li><li><a href="#update-log">Update log</a></li></ul></nav>
+
+    <h2 id="project-links">Project links and source paths</h2>
+    <ul>
+      <li><a href="./">Open Miku Home</a> on this host. The primary published address is <a href="https://bowiemoonenttv.github.io/miku-home/">GitHub Pages</a>.</li>
+      <li><a href="https://miku-home.vercel.app/">Vercel mirror</a>. This is a separate deployment; its version can differ from GitHub Pages.</li>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home">Source repository</a>. Web files live in <code>app/</code>; the local development server is <code>server/server.js</code>.</li>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home/blob/main/CHANGELOG.md">Full changelog</a> and <a href="https://github.com/BowieMoonenTTV/miku-home/blob/main/ROADMAP.md">roadmap</a>.</li>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home/actions/workflows/pages.yml">Website deployment history</a> and <a href="https://github.com/BowieMoonenTTV/miku-home/actions/workflows/a11y.yml">automated test history</a>.</li>
+    </ul>
+    <p>The hosted app does not automatically connect to Project Nova, Ollama or Home Assistant. Optional integrations require a configured service. No connection or installation is implied by a download.</p>
 
     <h2>Current release</h2>
     <p>Version 0.1.0-beta, a prerelease, published October 25, 2026 at 9:34 PM Eastern Time. <a href="https://github.com/BowieMoonenTTV/miku-home/releases/tag/v0.1.0-beta">Read the release notes on GitHub</a>.</p>
+
+    <p>A separate <a href="https://github.com/BowieMoonenTTV/miku-home/releases/tag/v0.1.0-beta-pr5">PR5 test prerelease</a> was published October 26, 2026. Its release notes label it unverified on a real device; it is not a new stable release. The original beta downloads below do not include every later source change.</p>
 
     <h3>Downloads</h3>
     <p>All downloads are free. Links open the file on GitHub.</p>
@@ -30,12 +44,35 @@
     </ul>
     <p>No download is needed to use Miku Home in a browser: <a href="./">open the web app</a>.</p>
 
-    <h2>Testing</h2>
+    <h2 id="testing">Testing</h2>
     <ul>
-      <li>Web app: passes 17 of 17 automated accessibility and privacy checks, with 0 axe accessibility violations and zero requests to any outside server.</li>
+      <li>The original beta release reported 17 automated checks. Current results belong to the exact commit in the automated test history linked above; an old count is not a current test result.</li>
       <li>Debian and Ubuntu package: the app window has been checked and shows the app.</li>
-      <li>Not yet tested on real devices: Android with the TalkBack screen reader, the Flatpak, Windows, macOS and the AppImage.</li>
+      <li>Manual Orca, TalkBack, VoiceOver and braille checks, and real-device checks for the packaged apps, have no new completion evidence in this review. Automated checks do not prove accessibility.</li>
     </ul>
+
+    <h2 id="open-work">Open work at this review</h2>
+    <p>Six pull requests were open when checked on November 14. Their current GitHub status is authoritative. Listing a proposed fix here does not mean it is merged or tested on your device.</p>
+    <ul>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home/pull/9">#9: braille replies while Miku's voice is on</a>. The existing screen-reader setting turns Miku's voice off; real screen-reader and braille verification is pending.</li>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home/pull/7">#7: security headers for the Vercel deployment</a>.</li>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home/pull/6">#6: deterministic Android version codes</a>.</li>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home/pull/4">#4: desktop build-only workflow</a>.</li>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home/pull/3">#3: beta build provenance and testing documentation</a>.</li>
+      <li><a href="https://github.com/BowieMoonenTTV/miku-home/pull/2">#2: Android backup and device-transfer restrictions</a>.</li>
+    </ul>
+    <p>Desktop beta assets are unsigned and came from a later manual Actions run, not the failed tagged release build. See the evidence in #3. This update does not republish packages or change release approvals.</p>
+
+    <h2 id="update-log">Update log</h2>
+    <h3>November 14, 2026 — project links and status reconciliation</h3>
+    <ul>
+      <li>Added a direct map to the web app, repository, source paths, changelog, roadmap and deployment history.</li>
+      <li>Distinguished the original beta, PR5 test build and current source; recorded the six open pull requests.</li>
+      <li>Replaced the undated current-test claim with commit-specific test history and explicit manual-test limitations.</li>
+      <li>Refreshed the offline cache version so installed web apps can receive this status update after reconnecting.</li>
+    </ul>
+    <h3>October 25, 2026 — initial public beta</h3>
+    <p>The first beta and initial status page were published. The release notes preserve the original test and packaging record.</p>
 
     <h2>App stores</h2>
     <p>Nothing has been submitted to any app store yet.</p>
@@ -46,7 +83,7 @@
     </ul>
 
     <h2>Team</h2>
-    <p>Miku Home is built with help from a small team of AI agents (app development, content, sponsorship and more) coordinated by Miku, with a daily quality audit. Every release is reviewed by Bowie.</p>
+    <p>Miku Home is maintained by BowieMoonen with assistance from Miku and other development agents. Release approvals belong to Bowie. This page does not claim that an agent or a daily audit is currently running.</p>
 
     <h2>Feedback</h2>
     <p>Found something hard to use? <a href="https://github.com/BowieMoonenTTV/miku-home/issues/new/choose">Open an issue on GitHub</a>.</p>

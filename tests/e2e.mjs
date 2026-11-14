@@ -9,6 +9,15 @@ if (!base) { server = createMikuServer(); await new Promise((r) => server.listen
 const origin = new URL(base).origin;
 const browser = await chromium.launch({ executablePath: exe, args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--no-sandbox"] });
 const ctx = await browser.newContext({ permissions: ["microphone"] });
+// Exercise the no-local-voice fallback deterministically, including on Windows
+// hosts that have system voices. Separate contexts below test local/native TTS.
+await ctx.addInitScript(() => {
+  Object.defineProperty(window, "speechSynthesis", { configurable: true, value: {
+    getVoices: () => [], speaking: false, pending: false,
+    cancel() {}, addEventListener() {}, removeEventListener() {},
+    speak() { throw new Error("No local voice should be used in this fixture"); },
+  } });
+});
 const page = await ctx.newPage();
 const external = [], consoleErrors = [], results = [];
 page.on("request", (r) => { const u = r.url(); if (!u.startsWith(origin) && !u.startsWith("data:") && !u.startsWith("blob:")) external.push(u); });

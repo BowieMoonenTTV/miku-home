@@ -42,7 +42,9 @@ Automated tests cannot prove accessibility. Please [open an issue](https://githu
 
 ## Quick start
 
-Project status (current release, downloads, testing and store plans): <https://bowiemoonenttv.github.io/miku-home/status.html>
+Project status (links, source paths, releases, testing and open work): <https://bowiemoonenttv.github.io/miku-home/status.html>
+
+Dated website updates: <https://bowiemoonenttv.github.io/miku-home/status.html#update-log>. Full development history: [CHANGELOG.md](CHANGELOG.md). The November 14 review does not certify manual screen-reader or device testing.
 
 Use it in a browser: open <https://bowiemoonenttv.github.io/miku-home/>, or run it yourself:
 
