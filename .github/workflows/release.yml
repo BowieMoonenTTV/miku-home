@@ -3,10 +3,18 @@ on:
   push: { tags: ["v*"] }
   workflow_dispatch:
     inputs:
-      tag: { description: "Existing release tag to upload to", required: true, default: "v0.1.0-beta" }
-permissions: { contents: write }
+      tag: { description: "Existing release tag (to upload to, or to build from when build_only is on)", required: true, default: "v0.1.0-beta" }
+      build_only:
+        description: "Build only: check out the tag, build, keep files as this run's artifacts. Never creates, uploads to or edits a release."
+        type: boolean
+        default: false
+# Read-only by default. Only the upload job below gets write access.
+permissions: { contents: read }
 jobs:
   build:
+    # Upload path: tag pushes, and manual runs with build_only off. Unchanged behaviour.
+    if: ${{ github.event_name == 'push' || !inputs.build_only }}
+    permissions: { contents: write }
     strategy:
       fail-fast: false
       matrix:
@@ -37,3 +45,48 @@ jobs:
           releaseDraft: false
           prerelease: true
           args: ${{ matrix.args }}
+
+  build-only:
+    # Manual runs with build_only on. Read-only token, no tauri-action, no release step:
+    # this job cannot create, upload to or edit any release. Files stay as run artifacts.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_only }}
+    permissions: { contents: read }
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: windows-latest, args: "--bundles nsis", name: windows }
+          - { platform: macos-latest, args: "--target universal-apple-darwin", name: macos }
+          - { platform: ubuntu-22.04, args: "--bundles appimage", name: appimage }
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "refs/tags/${{ inputs.tag }}" }
+      - name: Record the exact commit built
+        shell: bash
+        run: echo "Building tag ${{ inputs.tag }} at commit $(git rev-parse HEAD)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: "${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}" }
+      - if: matrix.platform == 'ubuntu-22.04'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: npm ci
+        working-directory: desktop
+      - name: Build (unsigned)
+        run: npx tauri build ${{ matrix.args }}
+        working-directory: desktop
+      - name: Collect files and checksums
+        shell: bash
+        run: |
+          mkdir -p out
+          find desktop/src-tauri/target -path '*/release/bundle/*' -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.AppImage' \) -exec cp {} out/ \;
+          ls -l out
+          test -n "$(ls out)"
+          cd out && (sha256sum * 2>/dev/null || shasum -a 256 *) | tee SHA256SUMS-${{ matrix.name }}.txt | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: miku-home-${{ inputs.tag }}-${{ matrix.name }}-unsigned-untested
+          path: out/
+          if-no-files-found: error
+          retention-days: 30
