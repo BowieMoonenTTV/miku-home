@@ -73,3 +73,29 @@ test("avatar reduced motion: redraws only when something changed", () => {
   m.update(0.05); assert.equal(m.update(0.05).dirty, false);
   m.setState("listening"); assert.equal(m.update(0.05).dirty, true);
 });
+
+// ---- Android versionCode (mobile/version-code.mjs) ----
+import { versionCode } from "../mobile/version-code.mjs";
+test("versionCode: known values", () => {
+  assert.equal(versionCode("0.1.0-beta"), 10030);
+  assert.equal(versionCode("0.1.0-beta.1"), 10031);
+  assert.equal(versionCode("0.1.0"), 10099);
+  assert.equal(versionCode("1.0.0"), 1000099);
+});
+test("versionCode: always above 100 (the first public APK) and rising", () => {
+  const order = ["0.0.1-alpha", "0.1.0-alpha", "0.1.0-beta", "0.1.0-beta.1", "0.1.0-beta.19", "0.1.0-rc", "0.1.0-rc.2", "0.1.0", "0.1.1-beta", "0.2.0", "1.0.0", "2099.99.99"];
+  const codes = order.map(versionCode);
+  for (let i = 0; i < codes.length; i++) {
+    assert.ok(codes[i] > 100, `${order[i]} gives ${codes[i]}`);
+    if (i) assert.ok(codes[i] > codes[i - 1], `${order[i]} must be above ${order[i - 1]}`);
+  }
+  assert.ok(versionCode("2099.99.99") <= 2_100_000_000);
+});
+test("versionCode: the current mobile version is supported", async () => {
+  const { readFileSync } = await import("node:fs");
+  const v = JSON.parse(readFileSync(new URL("../mobile/package.json", import.meta.url))).version;
+  assert.ok(versionCode(v) > 100);
+});
+test("versionCode: bad versions are refused", () => {
+  for (const v of ["1.0", "1.0.0-dev", "0.100.0", "0.1.0-beta.20", "v1.0.0"]) assert.throws(() => versionCode(v));
+});
