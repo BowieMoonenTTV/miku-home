@@ -12,6 +12,8 @@ The baseline (typed and on-device speech, local voices, captions) works with not
 MIKU_CONNECT="https://ha.<your-tailnet>.ts.net https://ollama.<your-tailnet>.ts.net" node scripts/csp.mjs
 ```
 
+This also writes the origins into `app/vercel.json`, so keep that build on your own tailnet and do not deploy it to the public mirror (see [../vercel.md](../vercel.md)).
+
 | Add-on | Doc | What it adds |
 | --- | --- | --- |
 | Home Assistant | [home-assistant.md](home-assistant.md) | Smart home control, Assist pipeline, Cast speakers |

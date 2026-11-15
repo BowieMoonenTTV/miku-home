@@ -73,3 +73,23 @@ test("avatar reduced motion: redraws only when something changed", () => {
   m.update(0.05); assert.equal(m.update(0.05).dirty, false);
   m.setState("listening"); assert.equal(m.update(0.05).dirty, true);
 });
+
+// ---- Vercel security headers (app/vercel.json, written by scripts/csp.mjs) ----
+import { readFileSync as readText } from "node:fs";
+const appFile = (f) => readText(new URL(`../app/${f}`, import.meta.url), "utf8");
+const metaCspOf = (f) => appFile(f).match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)"/)[1];
+const vercelCfg = JSON.parse(appFile("vercel.json"));
+const vercelHeader = (source, key) => vercelCfg.headers.find((h) => h.source === source)?.headers.find((x) => x.key === key)?.value;
+test("vercel.json: page CSP headers match the meta CSP, plus frame-ancestors 'none'", () => {
+  for (const [source, file] of [["/", "index.html"], ["/index.html", "index.html"], ["/privacy.html", "privacy.html"], ["/status.html", "status.html"]]) {
+    assert.equal(vercelHeader(source, "Content-Security-Policy"), `${metaCspOf(file)}; frame-ancestors 'none'`, `${source}: run npm run csp`);
+  }
+});
+test("vercel.json: security headers on every file, same as server/server.js", () => {
+  assert.equal(vercelHeader("/(.*)", "X-Content-Type-Options"), "nosniff");
+  assert.equal(vercelHeader("/(.*)", "Referrer-Policy"), "no-referrer");
+  assert.equal(vercelHeader("/(.*)", "Permissions-Policy"), "microphone=(self), camera=(), geolocation=()");
+  assert.equal(vercelHeader("/(.*)", "Cross-Origin-Opener-Policy"), "same-origin");
+  assert.equal(vercelHeader("/(.*)", "X-Frame-Options"), "DENY");
+  assert.equal(vercelHeader("/sw.js", "Cache-Control"), "no-cache");
+});
