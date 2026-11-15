@@ -22,6 +22,9 @@ regenerates it, builds, and signs only when the signing secrets exist. See `docs
 - `RECORD_AUDIO`: only when you press Speak. Audio is processed on the phone and never sent anywhere.
 - `MODIFY_AUDIO_SETTINGS`: needed by Android WebView for microphone capture.
 - No `INTERNET` permission.
+- Android backup is off (`allowBackup=false`, `fullBackupContent=false`, and
+  `dataExtractionRules` excluding all app storage), so settings such as a Home Assistant
+  token are never copied to Google's cloud backup or to a new phone.
 
 ## Known limits
 
